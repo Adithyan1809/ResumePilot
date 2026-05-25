@@ -792,7 +792,12 @@ def _generate_reportlab_pdf_fallback(sections: Dict[str, Any], template_name: st
                 story.append(Paragraph(f"<b>Relevant Coursework:</b> {escape(coursework)}", cw_style))
             story.append(Spacer(1, 4))
 
-    doc.build(story)
+    def set_metadata(canvas, doc_obj):
+        canvas.setTitle(f"{candidate_name} - Resume")
+        canvas.setAuthor(candidate_name)
+        canvas.setSubject(f"Tailored Resume for {sections.get('job_title', 'Job Application')}")
+
+    doc.build(story, onFirstPage=set_metadata, onLaterPages=set_metadata)
     pdf_bytes = buffer.getvalue()
     buffer.close()
     

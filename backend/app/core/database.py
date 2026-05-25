@@ -23,7 +23,13 @@ engine_kwargs = {
     "echo": settings.DEBUG,
 }
 
-if not is_sqlite:
+if is_sqlite:
+    # Prevent OneDrive/network file locking from blocking startup indefinitely
+    engine_kwargs["connect_args"] = {
+        "timeout": 5,
+        "check_same_thread": False,
+    }
+else:
     engine_kwargs.update({
         "pool_pre_ping": True,
         "pool_size": 20,

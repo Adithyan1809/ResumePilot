@@ -300,6 +300,10 @@ async def sanitize_and_validate_tailored_sections(
                 github_techs.extend(proj.get("technologies", []) or [])
     github_techs = list(set([t for t in github_techs if t]))
 
+    # Compute allowed tech whitelist once for the entire validation pipeline
+    from app.services.technology_grounding_engine import extract_allowed_technologies
+    allowed_techs = extract_allowed_technologies(raw_text, github_techs)
+
     # ── 2. Job Role Classification & Dynamic Reordering ─────────────
     role = "general"
     if job_description:
@@ -346,16 +350,18 @@ async def sanitize_and_validate_tailored_sections(
     # Naturalize professional summary to sound extremely human and professional
     summary_text = naturalize_summary(summary_text)
 
-    # Apply role transferability mode & reality preservation to summary
+    # Apply role transition mode & reality preservation to summary
     try:
-        from app.services.reality_preservation_engine import apply_role_transferability_summary, cleanse_ungrounded_technologies
-        # Apply role transferability mode (pivots backend/student candidates to transferable API and growth fundamentals)
-        summary_text = apply_role_transferability_summary(summary_text, role, raw_text)
+        from app.services.role_transition_engine import adjust_summary_for_transition
+        from app.services.reality_preservation_engine import cleanse_ungrounded_technologies
+        
+        # Apply role transition mindset (emphasizes scalable APIs and growing interests naturally)
+        summary_text = adjust_summary_for_transition(summary_text, role, allowed_techs)
         # Cleanse any ungrounded technology keywords from summary
         summary_text = cleanse_ungrounded_technologies(summary_text, raw_text, github_techs)
     except Exception as exc:
         import logging
-        logging.getLogger(__name__).error(f"Summary reality preservation failed: {exc}")
+        logging.getLogger(__name__).error(f"Summary reality preservation/transition failed: {exc}")
 
     if isinstance(sanitized.get("summary"), dict):
         sanitized["summary"]["text"] = summary_text
@@ -441,6 +447,10 @@ async def sanitize_and_validate_tailored_sections(
                 try:
                     from app.services.reality_preservation_engine import cleanse_ungrounded_technologies
                     from app.services.experience_authenticity_engine import verify_bullet_authenticity
+                    from app.services.role_transition_engine import adjust_bullet_for_transition
+                    
+                    # Apply role transition mapping to intercept and convert fake tech stacks to transferable systems work
+                    b_text = adjust_bullet_for_transition(b_text, role, allowed_techs)
                     b_text = cleanse_ungrounded_technologies(b_text, raw_text, github_techs)
                     b_text = verify_bullet_authenticity(b_text, raw_text)
                 except Exception as exc:
@@ -543,6 +553,10 @@ async def sanitize_and_validate_tailored_sections(
                 try:
                     from app.services.reality_preservation_engine import cleanse_ungrounded_technologies
                     from app.services.experience_authenticity_engine import verify_bullet_authenticity
+                    from app.services.role_transition_engine import adjust_bullet_for_transition
+                    
+                    # Apply role transition mapping to project bullets
+                    b_text = adjust_bullet_for_transition(b_text, role, allowed_techs)
                     b_text = cleanse_ungrounded_technologies(b_text, raw_text, github_techs)
                     b_text = verify_bullet_authenticity(b_text, raw_text)
                 except Exception as exc:
@@ -626,6 +640,27 @@ async def sanitize_and_validate_tailored_sections(
         import logging
         logging.getLogger(__name__).error(f"Realism assessment failed: {exc}")
 
+    # ── 7. Integrate New Reality-First Career Transition Engines ───
+    try:
+        from app.services.ai_engine import _mock_jd_analysis
+        from app.services.skill_gap_engine import analyze_skill_gaps
+        from app.services.learning_recommendation_engine import generate_recommendations
+        from app.services.role_alignment_confidence_engine import calculate_role_alignment
+
+        jd_analysis = _mock_jd_analysis(job_description or "Software Engineer")
+        skill_gaps = analyze_skill_gaps(allowed_techs, jd_analysis)
+        learning_recs = generate_recommendations(skill_gaps)
+        role_alignment = calculate_role_alignment(allowed_techs, role, jd_analysis, skill_gaps)
+        
+        if "layout" not in cleaned or not isinstance(cleaned["layout"], dict):
+            cleaned["layout"] = {}
+        cleaned["layout"]["skill_gaps"] = skill_gaps
+        cleaned["layout"]["learning_recs"] = learning_recs
+        cleaned["layout"]["role_alignment"] = role_alignment
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).error(f"Career transition engines integration failed: {exc}")
+
     # Call manage_content_density to prune and format variables
     from app.services.content_density_manager import manage_content_density
     density_result = manage_content_density(cleaned)
@@ -633,10 +668,10 @@ async def sanitize_and_validate_tailored_sections(
     final_sections = density_result["sections"]
     final_sections["layout"] = density_result["layout"]
     
-    # Make sure the realism analytics carry over to final layout
+    # Make sure all realism and transition analytics carry over to final layout
     if "layout" in cleaned:
-        for k in ["realism_score", "recruiter_readability_score", "variety_score", "realism_suggestions"]:
-            if k in cleaned["layout"] and k not in final_sections["layout"]:
+        for k in cleaned["layout"]:
+            if k not in final_sections["layout"]:
                 final_sections["layout"][k] = cleaned["layout"][k]
     return final_sections
 

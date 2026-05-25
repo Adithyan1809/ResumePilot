@@ -7,6 +7,7 @@ or failing due to OS/environment resource constraints.
 """
 
 import logging
+import threading
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -17,27 +18,41 @@ settings = get_settings()
 
 # Global cache for the sentence-transformer model
 _model_instance = None
+_model_load_attempted = False
 
 
 def get_embedding_model():
-    """Retrieve or initialize the Sentence Transformer model instance with caching."""
-    global _model_instance
+    """Retrieve or initialize the Sentence Transformer model with a timeout guard.
+    
+    Uses a background thread with a 10-second timeout to prevent blocking uvicorn
+    startup in OneDrive-synced or network-restricted environments.
+    """
+    global _model_instance, _model_load_attempted
     if _model_instance is not None:
         return _model_instance
-
-    try:
-        from sentence_transformers import SentenceTransformer
-        logger.info(f"Loading sentence-transformer model: {settings.SEMANTIC_MODEL_NAME}...")
-        # Loads all-MiniLM-L6-v2 which is about 80MB
-        _model_instance = SentenceTransformer(settings.SEMANTIC_MODEL_NAME)
-        logger.info("Sentence-transformer loaded successfully.")
-        return _model_instance
-    except Exception as exc:
-        logger.warning(
-            f"Failed to load sentence-transformer ({settings.SEMANTIC_MODEL_NAME}): {exc}. "
-            "Using TF-IDF fallback for semantic similarity scoring."
-        )
+    if _model_load_attempted:
         return None
+
+    result = [None]
+    def _load():
+        try:
+            from sentence_transformers import SentenceTransformer
+            result[0] = SentenceTransformer(settings.SEMANTIC_MODEL_NAME)
+        except Exception as exc:
+            logger.warning(f"sentence-transformers failed to load: {exc}. Using TF-IDF fallback.")
+
+    thread = threading.Thread(target=_load, daemon=True)
+    thread.start()
+    thread.join(timeout=10)  # Max 10 seconds — never blocks startup
+
+    _model_load_attempted = True
+    if result[0] is not None:
+        _model_instance = result[0]
+        logger.info("Sentence-transformer model loaded successfully.")
+    else:
+        logger.warning("Sentence-transformer timed out or failed. Using TF-IDF fallback for all semantic scoring.")
+
+    return _model_instance
 
 
 async def calculate_semantic_similarity(text1: str, text2: str) -> float:

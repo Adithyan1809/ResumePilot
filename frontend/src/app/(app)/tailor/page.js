@@ -14,6 +14,7 @@ import ScoreBreakdown from "../../../components/ats/ScoreBreakdown";
 import KeywordGrid from "../../../components/ats/KeywordGrid";
 import SuggestionsList from "../../../components/ats/SuggestionsList";
 import SideBySide from "../../../components/resume/SideBySide";
+import ResumePreview from "../../../components/resume/ResumePreview";
 
 /**
  * Core Wizard Page.
@@ -450,73 +451,132 @@ export default function TailorWizardPage() {
 
           {/* STEP 5: Choose Templates and Downloads */}
           {step === 5 && tailoredResume && (
-            <Card className="p-8 border-slate-850 flex flex-col gap-8">
-              <div>
-                <h3 className="text-xl font-bold text-slate-100 mb-2">Export optimized resume</h3>
-                <p className="text-sm text-slate-500">
-                  Select a template layout to compile your optimized profile for downloads.
-                </p>
-              </div>
-
-              {/* Template Picker */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[
-                  { id: "classic", name: "Classic Serif", desc: "Traditional clean serif fonts. Ideal for Finance, corporate, or legacy roles." },
-                  { id: "modern", name: "Modern Sans", desc: "Sleek contemporary sans-serif layout. Perfect for Tech, software, and marketing." },
-                  { id: "executive", name: "Executive Bold", desc: "Clean layout with bold accent borders. Optimal for senior, lead, and C-Suite profiles." }
-                ].map((tpl) => (
-                  <div
-                    key={tpl.id}
-                    onClick={() => setTemplate(tpl.id)}
-                    className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                      template === tpl.id
-                        ? "border-indigo-500 bg-indigo-500/5 shadow-xl shadow-indigo-500/5"
-                        : "border-slate-800 hover:border-slate-700 bg-slate-950/20"
-                    }`}
-                  >
-                    <h5 className="font-bold text-slate-200 text-sm mb-2">{tpl.name}</h5>
-                    <p className="text-xs text-slate-500 leading-relaxed">{tpl.desc}</p>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full animate-fadeIn">
+              {/* Left Column - Controls & Career Pivoting Analytics */}
+              <div className="lg:col-span-5 flex flex-col gap-6">
+                <Card className="p-6 border-slate-850 flex flex-col gap-6">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-100 mb-2">Export optimized resume</h3>
+                    <p className="text-sm text-slate-500">
+                      Select a layout template to compile your optimized profile for downloads.
+                    </p>
                   </div>
-                ))}
+
+                  {/* Template Picker */}
+                  <div className="flex flex-col gap-3">
+                    {[
+                      { id: "classic", name: "Classic Serif", desc: "Traditional clean serif fonts. Ideal for Finance, corporate, or legacy roles." },
+                      { id: "modern", name: "Modern Sans", desc: "Sleek contemporary sans-serif layout. Perfect for Tech, software, and marketing." },
+                      { id: "executive", name: "Executive Bold", desc: "Clean layout with bold accent borders. Optimal for senior, lead, and C-Suite profiles." }
+                    ].map((tpl) => (
+                      <div
+                        key={tpl.id}
+                        onClick={() => setTemplate(tpl.id)}
+                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
+                          template === tpl.id
+                            ? "border-indigo-500 bg-indigo-500/5"
+                            : "border-slate-800 hover:border-slate-700 bg-slate-950/20"
+                        }`}
+                      >
+                        <h5 className="font-bold text-slate-200 text-sm mb-1">{tpl.name}</h5>
+                        <p className="text-[11px] text-slate-500 leading-relaxed">{tpl.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-col gap-3 border-t border-slate-800/80 pt-5">
+                    <Button
+                      variant="primary"
+                      onClick={() => handleDownload("pdf")}
+                      icon={
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      }
+                    >
+                      Download PDF
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleDownload("docx")}
+                      icon={
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      }
+                    >
+                      Download DOCX
+                    </Button>
+                  </div>
+
+                  <div className="flex justify-between items-center border-t border-slate-800/60 pt-4">
+                    <Button variant="outline" size="sm" onClick={() => setStep(4)}>
+                      Back
+                    </Button>
+                    <Link href="/dashboard">
+                      <Button variant="ghost" size="sm">Exit to Dashboard</Button>
+                    </Link>
+                  </div>
+                </Card>
+
+                {/* dynamic Role Transition Match Analytics */}
+                {tailoredResume.tailored_sections?.layout?.role_alignment && (
+                  <Card className="p-6 border-slate-850 bg-slate-950/40 flex flex-col gap-4">
+                    <div>
+                      <h4 className="font-bold text-slate-200 text-xs uppercase tracking-wider mb-1">Career Transition Analytics</h4>
+                      <p className="text-[10px] text-slate-500">Truth-preserving role match assessment based on actual technical background.</p>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      {Object.entries(tailoredResume.tailored_sections.layout.role_alignment.role_matches || {}).map(([key, val]) => (
+                        <div key={key} className="flex justify-between items-center text-xs border-b border-slate-900 pb-2 last:border-0 last:pb-0">
+                          <span className="text-slate-400 font-medium">{key}</span>
+                          <span className="font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full">{val}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="border-t border-slate-900 pt-3 flex flex-col gap-1.5 text-[11px]">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Transferable Skill Strength:</span>
+                        <span className="font-semibold text-emerald-400">{tailoredResume.tailored_sections.layout.role_alignment.transferable_skill_strength}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Recruiter Confidence Rating:</span>
+                        <span className="font-semibold text-emerald-400">{tailoredResume.tailored_sections.layout.role_alignment.recruiter_confidence_estimate}%</span>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
+                {/* dynamic Learning recommendations & skill gaps */}
+                {tailoredResume.tailored_sections?.layout?.learning_recs && (
+                  <Card className="p-6 border-slate-850 bg-slate-950/40 flex flex-col gap-4">
+                    <div>
+                      <h4 className="font-bold text-slate-200 text-xs uppercase tracking-wider mb-1">Truthful Growth Projects</h4>
+                      <p className="text-[10px] text-slate-500">Recommended projects to build this missing expertise instead of fabricating claims.</p>
+                    </div>
+                    <ul className="list-disc pl-4 flex flex-col gap-2 text-xs text-slate-400 leading-relaxed">
+                      {tailoredResume.tailored_sections.layout.learning_recs.recommended_projects?.map((proj, idx) => (
+                        <li key={idx} className="marker:text-indigo-400">{proj}</li>
+                      ))}
+                    </ul>
+                  </Card>
+                )}
               </div>
 
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center border-t border-slate-800/80 pt-8 mt-4">
-                <Button
-                  variant="primary"
-                  className="w-full sm:w-auto"
-                  onClick={() => handleDownload("pdf")}
-                  icon={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                  }
-                >
-                  Download PDF
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  onClick={() => handleDownload("docx")}
-                  icon={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                  }
-                >
-                  Download DOCX
-                </Button>
+              {/* Right Column - Live Resume Preview */}
+              <div className="lg:col-span-7">
+                <Card className="p-6 border-slate-850 bg-slate-950/20 h-full flex flex-col gap-4">
+                  <div className="flex justify-between items-center border-b border-slate-800/80 pb-3">
+                    <h4 className="font-bold text-slate-200 text-sm">Live Branded Draft ({template.toUpperCase()})</h4>
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider bg-slate-950 px-2 py-1 border border-slate-850 rounded">Live Preview</span>
+                  </div>
+                  <div className="border border-slate-900 rounded-xl p-4 bg-slate-950/30">
+                    <ResumePreview parsedSections={tailoredResume.tailored_sections} />
+                  </div>
+                </Card>
               </div>
-
-              <div className="flex justify-between items-center border-t border-slate-800/60 pt-6">
-                <Button variant="outline" onClick={() => setStep(4)}>
-                  Back
-                </Button>
-                <Link href="/dashboard">
-                  <Button variant="ghost">Exit to Dashboard</Button>
-                </Link>
-              </div>
-            </Card>
+            </div>
           )}
         </>
       )}
