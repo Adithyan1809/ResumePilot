@@ -608,6 +608,12 @@ def _generate_reportlab_pdf_fallback(sections: Dict[str, Any], template_name: st
         bottomMargin=margin_pt,
     )
     
+    # Set professional document metadata for browser tab titles
+    candidate_name = sections.get("contact_info", {}).get("name", "Candidate")
+    doc.title = f"{candidate_name} - Resume"
+    doc.author = candidate_name
+    doc.subject = f"Tailored Resume for {sections.get('job_title', 'Job Application')}"
+    
     styles = getSampleStyleSheet()
     story = []
     
@@ -873,6 +879,8 @@ def _generate_minimal_pdf_fallback(sections: Dict[str, Any], template_name: str)
     objects.append(f"5 0 obj << /Length {len(content_stream)} >> stream\n")
     objects.append(content_stream.decode("latin-1", "replace"))
     objects.append("\nendstream endobj\n")
+    info_dict = f"<< /Title ({_pdf_literal(name)} - Resume) /Author ({_pdf_literal(name)}) >>"
+    objects.append(f"6 0 obj {info_dict} endobj\n")
 
     pdf = bytearray(b"%PDF-1.4\n")
     offsets = [0]
@@ -885,7 +893,7 @@ def _generate_minimal_pdf_fallback(sections: Dict[str, Any], template_name: str)
     pdf.extend(b"0000000000 65535 f \n")
     for off in offsets[1:]:
         pdf.extend(f"{off:010d} 00000 n \n".encode("ascii"))
-    pdf.extend(b"trailer << /Size 6 /Root 1 0 R >>\nstartxref\n")
+    pdf.extend(b"trailer << /Size 7 /Root 1 0 R /Info 6 0 R >>\nstartxref\n")
     pdf.extend(f"{xref_start}\n%%EOF".encode("ascii"))
     return bytes(pdf)
 
@@ -990,7 +998,7 @@ body {
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Resume</title>
+    <title>{{ contact.name | default('Candidate') }} - Resume</title>
     <style>
         @page {
             size: letter;
