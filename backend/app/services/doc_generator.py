@@ -236,17 +236,43 @@ def _get_jinja_env():
     return Environment(loader=FileSystemLoader(str(html_dir)))
 
 
-async def generate_pdf(sections: Dict[str, Any], template_name: str) -> bytes:
+async def generate_pdf(
+    sections: Dict[str, Any],
+    template_name: str,
+    raw_text: str = "",
+    original_sections: Dict[str, Any] = None,
+    job_description: str = ""
+) -> bytes:
     """Generate a print-ready PDF file from resume sections using a template.
 
     Args:
         sections: Tailored resume sections.
         template_name: The layout style (classic, modern, executive).
+        raw_text: Optional original resume text for grounding checks.
+        original_sections: Optional original resume parsed sections.
+        job_description: Optional target job description.
 
     Returns:
         Bytes of the generated PDF file.
     """
     logger.info(f"Generating PDF using template '{template_name}'...")
+    
+    # ── Execute Strict Final Quality Gate ──
+    from app.services.final_resume_quality_gate import validate_final_resume, QualityGateValidationError
+    orig = original_sections or sections
+    raw = raw_text or " ".join([
+        sections.get("summary", ""),
+        " ".join([b.get("text", "") if isinstance(b, dict) else str(b) for entry in sections.get("experience", []) for b in entry.get("bullets", [])]) if sections.get("experience") else "",
+        " ".join(sections.get("skills", [])) if sections.get("skills") else ""
+    ])
+    
+    gate_res = await validate_final_resume(
+        sections=sections,
+        raw_text=raw,
+        original_sections=orig,
+        job_description=job_description
+    )
+    sections = gate_res["sections"]
     
     # Dynamically compute layout if missing or empty
     if not sections.get("layout"):
@@ -288,14 +314,22 @@ async def generate_pdf(sections: Dict[str, Any], template_name: str) -> bytes:
         return pdf_bytes
         
     except Exception as exc:
+        if isinstance(exc, QualityGateValidationError):
+            raise
         logger.warning(
             f"WeasyPrint PDF generation failed: {exc}. "
             "Using robust ReportLab programmatic PDF layout engine fallback."
         )
-        return _generate_reportlab_pdf_fallback(sections, template_name)
+        return await _generate_reportlab_pdf_fallback(sections, template_name, raw_text, original_sections, job_description)
 
 
-async def generate_docx(sections: Dict[str, Any], template_name: str) -> bytes:
+async def generate_docx(
+    sections: Dict[str, Any],
+    template_name: str,
+    raw_text: str = "",
+    original_sections: Dict[str, Any] = None,
+    job_description: str = ""
+) -> bytes:
     """Generate a Microsoft Word (.docx) file from resume sections.
 
     Uses python-docx to construct an ATS-friendly single-column layout programmatically,
@@ -304,11 +338,31 @@ async def generate_docx(sections: Dict[str, Any], template_name: str) -> bytes:
     Args:
         sections: Tailored resume sections.
         template_name: The layout style (classic, modern, executive).
+        raw_text: Optional original resume text for grounding checks.
+        original_sections: Optional original resume parsed sections.
+        job_description: Optional target job description.
 
     Returns:
         Bytes of the generated Word document.
     """
     logger.info(f"Generating DOCX using style '{template_name}'...")
+    
+    # ── Execute Strict Final Quality Gate ──
+    from app.services.final_resume_quality_gate import validate_final_resume
+    orig = original_sections or sections
+    raw = raw_text or " ".join([
+        sections.get("summary", ""),
+        " ".join([b.get("text", "") if isinstance(b, dict) else str(b) for entry in sections.get("experience", []) for b in entry.get("bullets", [])]) if sections.get("experience") else "",
+        " ".join(sections.get("skills", [])) if sections.get("skills") else ""
+    ])
+    
+    gate_res = await validate_final_resume(
+        sections=sections,
+        raw_text=raw,
+        original_sections=orig,
+        job_description=job_description
+    )
+    sections = gate_res["sections"]
     
     # Dynamically compute layout if missing or empty
     if not sections.get("layout"):
@@ -570,12 +624,36 @@ def _add_docx_section_header(doc, title: str, font_name: str, font_size_pt: floa
 
 # ── Programmatic Fallback PDF Engine via ReportLab ──────────────
 
-def _generate_reportlab_pdf_fallback(sections: Dict[str, Any], template_name: str) -> bytes:
+async def _generate_reportlab_pdf_fallback(
+    sections: Dict[str, Any],
+    template_name: str,
+    raw_text: str = "",
+    original_sections: Dict[str, Any] = None,
+    job_description: str = ""
+) -> bytes:
     """Fallback generator using standard ReportLab.
 
     ReportLab is purely Python-based and has no OS C-level library dependencies.
     """
     logger.info("Starting ReportLab programmatic PDF compilation...")
+    
+    # ── Execute Strict Final Quality Gate ──
+    from app.services.final_resume_quality_gate import validate_final_resume
+    orig = original_sections or sections
+    raw = raw_text or " ".join([
+        sections.get("summary", ""),
+        " ".join([b.get("text", "") if isinstance(b, dict) else str(b) for entry in sections.get("experience", []) for b in entry.get("bullets", [])]) if sections.get("experience") else "",
+        " ".join(sections.get("skills", [])) if sections.get("skills") else ""
+    ])
+    
+    gate_res = await validate_final_resume(
+        sections=sections,
+        raw_text=raw,
+        original_sections=orig,
+        job_description=job_description
+    )
+    sections = gate_res["sections"]
+    
     sections = normalize_resume_sections(sections)
     try:
         from io import BytesIO

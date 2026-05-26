@@ -34,9 +34,13 @@ def is_sentence_complete(sentence: str) -> bool:
         if re.search(pattern, s_lower):
             return False
             
-    # 2. Reject malformed conjunctions like "andfor", "withfor", "using and"
-    corruptions = ["andfor", "withfor", "using and", "and for to", "like."]
+    # 2. Reject malformed conjunctions like "andfor", "withfor", "using and", or "andto"
+    corruptions = ["andfor", "withfor", "using and", "and for to", "like.", "andto"]
     if any(c in s_lower for c in corruptions):
+        return False
+        
+    # Reject double or corrupted punctuation marks (e.g. .,. or ,., or .,)
+    if re.search(r"[.,!?]{2,}", s_lower):
         return False
         
     # 3. Reject dangling end words before punctuation
@@ -63,9 +67,13 @@ def heal_broken_sentence(text: str) -> str:
         
     healed = text.strip()
     
-    # 1. Clean up spacing and double punctuation
+    # 1. Clean up spacing, double punctuation, and token merges
     healed = re.sub(r"\s+", " ", healed)
+    healed = healed.replace("andto", "and to")
     healed = healed.replace("andfor", "and").replace("withfor", "with").replace("using and", "using")
+    
+    # Replace consecutive double/corrupt punctuation with a single period
+    healed = re.sub(r"[.,!?]{2,}", ".", healed)
     
     # 2. Recursively peel trailing dangling prepositions and conjunctions
     while True:

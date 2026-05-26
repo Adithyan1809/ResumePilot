@@ -6,6 +6,7 @@ Stores user account information with hashed passwords for authentication.
 
 import uuid
 from datetime import datetime, timezone
+from typing import Optional
 
 from sqlalchemy import Boolean, DateTime, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -66,6 +67,13 @@ class User(Base):
         "TailoredResume",
         back_populates="owner",
         cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    resume_profile: Mapped[Optional["UserResumeProfile"]] = relationship(  # noqa: F821
+        "UserResumeProfile",
+        back_populates="owner",
+        cascade="all, delete-orphan",
+        uselist=False,
         lazy="selectin",
     )
 

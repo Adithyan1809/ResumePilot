@@ -614,7 +614,7 @@ async def sanitize_and_validate_tailored_sections(
     # ── Ultimate Recruiter-Grade Final Quality Gate ──────────────────
     try:
         from app.services.final_resume_quality_gate import validate_final_resume
-        gate_result = await validate_final_resume(sanitized, raw_text, original, job_description)
+        gate_result = await validate_final_resume(sanitized, raw_text, original, job_description, strict_mode=False)
         sanitized = gate_result["sections"]
     except Exception as exc:
         import logging

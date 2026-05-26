@@ -1,0 +1,354 @@
+{
+  "github_analysis_https": {
+    "value": {
+      "username": "https",
+      "total_repositories": 1,
+      "total_stars": 2,
+      "language_distribution": {},
+      "engineering_consistency_score": 72.0,
+      "project_quality_scores": {
+        "readme_quality_average": 50.0,
+        "test_suite_presence": "Partial"
+      },
+      "technical_depth_signals": {
+        "complexity_average": 65.0,
+        "advanced_architectures_detected": []
+      },
+      "top_projects": [
+        {
+          "name": "try_git",
+          "language": "",
+          "readme_score": 50.0,
+          "complexity_score": 65.0,
+          "maturity_score": 70.0,
+          "stars": 2
+        }
+      ]
+    },
+    "expire_time": 1779863469.8956742
+  },
+  "orchestrator_v4_6cb3f155-df31-43d4-bbeb-e9057f8b7a5a_0_9073715000545479847_classic_backend": {
+    "value": {
+      "job_title": "Backend Systems Engineer",
+      "company": "Stripe",
+      "tailored_sections": {
+        "contact_info": {
+          "name": "Jordan Vance",
+          "email": "jordan@vance.dev",
+          "github": "github.com/jordanvance"
+        },
+        "summary": "Engineered robust software components to optimize system performance and reliability.",
+        "experience": [],
+        "projects": [
+          {
+            "name": "ScaleResilient API Gateway",
+            "technologies": [
+              "Python",
+              "Docker"
+            ],
+            "description": [
+              "Engineered scalable backend service APIs in Python using FastAPI, resulting in 25% reduction in endpoint latency.",
+              "Spearheaded database query optimizations and caching layer integration via PostgreSQL and Redis, reducing request bottlenecks by 25%."
+            ],
+            "link": ""
+          }
+        ],
+        "skills": {
+          "Programming Languages": [
+            "Python",
+            "Go",
+            "TypeScript"
+          ],
+          "Databases": [
+            "PostgreSQL",
+            "Redis"
+          ],
+          "Tools": [
+            "Docker",
+            "Kubernetes",
+            "Git"
+          ]
+        },
+        "education": [],
+        "certifications": [],
+        "job_title": "Backend Systems Engineer",
+        "company": "Stripe",
+        "layout": {
+          "styling": {
+            "font_family": "Cambria, Georgia, serif",
+            "line_height": 1.25,
+            "section_spacing_margin": "18px",
+            "bullet_density": "high",
+            "show_branding_border": false,
+            "accent_color": "#1e293b",
+            "recruiter_vibe": "Traditional corporate, legacy, finance-aligned"
+          },
+          "grounding_score": 0.0,
+          "trust_score": 0.0,
+          "realism_score": 100.0,
+          "integrity_score": 100.0,
+          "ats_score": 64.25,
+          "validation_failures": [],
+          "recruiter_readability_score": 90.0,
+          "shortlist_likelihood": "High",
+          "recruiter_suggestions": [
+            "Professional Summary is too brief. Expand to 3 structured lines."
+          ]
+        }
+      },
+      "ats_score": {
+        "overall_score": 48.8,
+        "keyword_match_score": 75.0,
+        "semantic_similarity_score": 43.43,
+        "skills_alignment_score": 75.0,
+        "action_verb_score": 90.0,
+        "achievement_score": 90.0,
+        "formatting_score": 75.0,
+        "section_completeness_score": 100.0
+      },
+      "missing_keywords": [
+        {
+          "keyword": "fastapi",
+          "importance": "High",
+          "category": "hard_skill"
+        }
+      ],
+      "suggestions": [
+        {
+          "category": "keywords",
+          "priority": "High",
+          "suggestion": "Incorporate 'fastapi' in future learning roadmaps."
+        }
+      ],
+      "company_intelligence": {
+        "font_family": "Cambria, Georgia, serif",
+        "line_height": 1.25,
+        "section_spacing_margin": "18px",
+        "bullet_density": "high",
+        "show_branding_border": false,
+        "accent_color": "#1e293b",
+        "recruiter_vibe": "Traditional corporate, legacy, finance-aligned"
+      },
+      "learning_roadmap": {
+        "recommended_projects": [
+          "Design an Async REST API: Develop a high-performance database service in FastAPI with async SQLAlchemy sessions, Pydantic v2 schemas, and OAuth2 security profiles."
+        ],
+        "roadmap_steps": [
+          "Master fastapi Asynchronous query pools",
+          "Master fastapi Dependency injection",
+          "Master fastapi Pydantic parsing schemas",
+          "Master fastapi OAuth2 configurations"
+        ]
+      },
+      "interview_readiness": {
+        "interview_readiness_score": 72.0,
+        "likely_interview_topics": [
+          "Data Structures & Core Algorithms",
+          "Git Version Control basics",
+          "Database normalizations & Indexing",
+          "RESTful API design and status protocols",
+          "Asynchronous Python (asyncio)"
+        ],
+        "weak_knowledge_areas": [
+          "fastapi syntax & system implementations"
+        ],
+        "recommended_preparation_topics": [
+          "Practice standard whiteboard/LeetCode array and string iterations.",
+          "Mock explain your projects using STAR methodology.",
+          "Revise SQL join structures and indexes.",
+          "Review FastAPI dependency injection rules.",
+          "Build a miniature proof-of-concept project integrating fastapi."
+        ]
+      },
+      "github_portfolio_report": {
+        "username": "https",
+        "total_repositories": 1,
+        "total_stars": 2,
+        "language_distribution": {},
+        "engineering_consistency_score": 72.0,
+        "project_quality_scores": {
+          "readme_quality_average": 50.0,
+          "test_suite_presence": "Partial"
+        },
+        "technical_depth_signals": {
+          "complexity_average": 65.0,
+          "advanced_architectures_detected": []
+        },
+        "top_projects": [
+          {
+            "name": "try_git",
+            "language": "",
+            "readme_score": 50.0,
+            "complexity_score": 65.0,
+            "maturity_score": 70.0,
+            "stars": 2
+          }
+        ]
+      },
+      "difference_metrics": {
+        "added_keywords": [
+          "Typescript",
+          "Redis",
+          "Docker",
+          "Postgresql",
+          "Git",
+          "Python"
+        ],
+        "score_improvement": 15.0,
+        "summary_modified": true,
+        "structural_changes": [
+          "Repositioned professional summary to emphasize backend APIs and adjacent transferable architectures.",
+          "Adapted experience bullets across all 0 employment roles, aligning metric presentations to target hiring objectives."
+        ]
+      },
+      "diagnostics": {
+        "grounding_score": 0.0,
+        "trust_score": 0.0,
+        "realism_score": 100.0,
+        "integrity_score": 100.0,
+        "ats_score": 64.25,
+        "unvalidated_technologies": [
+          "docker",
+          "redis",
+          "postgresql",
+          "python",
+          "fastapi"
+        ],
+        "failures": [],
+        "approved": true
+      },
+      "employability_index": {
+        "employability_score": 48.8,
+        "employability_band": "Moderate Competitiveness",
+        "composite_dimensions": {
+          "ats_readiness": "Solid",
+          "recruiter_trust": "Needs calibration",
+          "technical_depth": "Standard",
+          "market_alignment": "Moderate alignment"
+        }
+      },
+      "market_intelligence": {
+        "domain": "backend",
+        "seniority_level": "Mid",
+        "average_salary_band": "$115k - $145k",
+        "trending_technologies": [
+          "Fastapi",
+          "Kubernetes",
+          "Redis",
+          "Docker",
+          "Grpc",
+          "Go",
+          "Rust"
+        ],
+        "hiring_demand_index": "High",
+        "key_regional_hotspot": "San Francisco Bay Area / Remote"
+      },
+      "career_progression": {
+        "current_position_index": 1,
+        "progression_path": [
+          {
+            "title": "Backend Engineering Intern",
+            "duration": "3-6 months",
+            "milestone": "Master SQL index setups and API route containerization."
+          },
+          {
+            "title": "Junior Backend Developer",
+            "duration": "1-2 years",
+            "milestone": "Own REST endpoint integrations and async database pools."
+          },
+          {
+            "title": "Software Engineer II (Systems)",
+            "duration": "2-3 years",
+            "milestone": "Design scalable Redis caching architectures and gRPC pipelines."
+          },
+          {
+            "title": "Senior Systems / AI Infrastructure Engineer",
+            "duration": "3+ years",
+            "milestone": "Orchestrate Kubernetes clusters and high-throughput data streams."
+          }
+        ],
+        "suggested_career_transition": "Aim for the next milestone: Software Engineer II (Systems) (2-3 years)",
+        "next_technical_goal": "Design scalable Redis caching architectures and gRPC pipelines."
+      },
+      "interview_simulation": {
+        "job_title": "Backend Systems Engineer",
+        "company": "Stripe",
+        "interview_prep_checklist": [
+          "Practice explaining your project milestones using the STAR model (Situation, Task, Action, Result).",
+          "Be prepared to detail technical tradeoffs (concurrency vs simplicity, memory vs processing)."
+        ],
+        "simulated_questions": {
+          "technical": [
+            "What is the difference in Python between multi-threading, multi-processing, and async/await task loops?",
+            "How do indexing structures and B-Trees operate inside PostgreSQL databases to accelerate query lookups?"
+          ],
+          "project_based": [
+            "On your project 'ScaleResilient API Gateway' built using Python, FastAPI, Redis, how did you approach containerization or database setup to ensure system performance?"
+          ],
+          "system_design": [
+            "How would you design a scalable system structure to process high-throughput API requests for Stripe?",
+            "How do rate-limiting middleware algorithms (like token bucket) secure backend REST gateways?"
+          ],
+          "behavioral": [
+            "Tell me about a time you had to debug a complex production bottleneck under tight delivery constraints. How did you proceed?",
+            "How do you handle technical disagreements on API design patterns or framework choices with other engineers?"
+          ]
+        }
+      },
+      "portfolio_assets": {
+        "portfolio_markdown": "# Jordan Vance\nBackend & Systems Software Engineer | Email: jordan@vance.dev\n\nDedicated software architect specializing in scalable REST interfaces, database optimization, and containerized devops workflows. Driven by code cleanliness and operational metrics.\n\n## \ud83d\udee0\ufe0f Technical Skill Matrix\n- **Programming Languages**: Python, Go, TypeScript\n- **Databases**: PostgreSQL, Redis\n- **Tools**: Docker, Kubernetes, Git\n\n## \ud83d\ude80 Featured Engineering Projects\n### ScaleResilient API Gateway\n*Stack: Python, FastAPI, Redis, Docker*\n\n- Designed a rate-limited REST gateway processing 15k requests/sec.\n- Integrated Redis connection pooling reducing server response times by 35%.\n\n",
+        "case_studies": [
+          {
+            "project_name": "ScaleResilient API Gateway",
+            "relevance_summary": "Designed and deployed 'ScaleResilient API Gateway' integrating Python, FastAPI, Redis to solve core systems bottlenecks.",
+            "recruiter_takeaway": "Showcases strong software engineering principles, robust integration testing, and quantified delivery metrics."
+          }
+        ],
+        "github_linked": true,
+        "theme_configuration": {
+          "accent": "#4f46e5",
+          "font_family": "Outfit, system-ui",
+          "layout": "modern-minimalist"
+        }
+      },
+      "branding_profiles": {
+        "linkedin_headline": "Mid-Level Systems Engineer | Specialized in Backend Applications | Python | Go | TypeScript | PostgreSQL",
+        "linkedin_about": "Hi, I'm Jordan Vance! I am a Mid-level software engineer obsessed with system latency, database optimization, and robust API development. Over my career, I've focused on translating complex business requirements into scale-resilient backends using Python, Go, TypeScript, PostgreSQL.\n\nKey expertise:\n\u2022 Asynchronous API routing and microservice gateways\n\u2022 Relational database index tuning and query scaling\n\u2022 Containerized deployments and devops pipeline automations",
+        "github_bio": "\ud83d\udcbb Systems Developer exploring Python, Go scaling architectures. Focused on metrics & clean code.",
+        "portfolio_slogan": "Engineering robust, metric-proven software systems."
+      },
+      "explainability_rationales": [
+        {
+          "component": "Professional Summary",
+          "action": "Repositioned core competencies",
+          "rationale": "Your professional summary was adapted to emphasize technical systems and backend architectures. We prioritized foundational scaling terms to immediately address recruiter screening priorities detected in the job requirements.",
+          "impact_metric": "Increases summary keyword matching score by 35%."
+        },
+        {
+          "component": "Work Experiences",
+          "action": "Adapted bullet layouts and mapped metrics",
+          "rationale": "We matched your technical bullets to recruiter-approved layouts and highlighted your quantified metrics (e.g. latency reductions, scale parameters). Recruiter simulators strongly track percentage improvements within the first 6 seconds of visual scans.",
+          "impact_metric": "Improves simulated recruiter trust confidence index."
+        },
+        {
+          "component": "Project Showcase",
+          "action": "Prioritized 'ScaleResilient API Gateway' to position #1",
+          "rationale": "The project 'ScaleResilient API Gateway' was dynamically ranked at the top because its whitelisted technologies and metric accomplishments directly match critical requirements found in the job description.",
+          "impact_metric": "Accelerates technical depth score and ATS keyword relevance indices."
+        },
+        {
+          "component": "Technical Skills Matrix",
+          "action": "Segmented skills into standardized domains",
+          "rationale": "Flat lists of technologies are difficult for recruiters to scan. We divided your Whitelisted skills into standard categories (Programming Languages, Databases, Tools) to ensure standard ATS linear parsers correctly categorize your expertise.",
+          "impact_metric": "Prevents skills parse blockages and guarantees clean formatting indexing."
+        }
+      ],
+      "application_tracking": {
+        "total_applied": 0,
+        "callbacks": 0,
+        "success_rate": 0.0
+      }
+    },
+    "expire_time": 1779781832.4201782
+  }
+}

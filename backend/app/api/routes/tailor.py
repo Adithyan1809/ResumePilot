@@ -5,6 +5,7 @@ Resume tailoring and ATS scoring API routes.
 import uuid
 from io import BytesIO
 from pathlib import Path
+from typing import Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
@@ -452,7 +453,7 @@ async def download_tailored_resume(
 
     Raises:
         HTTPException 404: If the tailored resume is not found.
-        HTTPException 400: If the format is unsupported.
+        HTTPException 400: If the format is unsupported or fails quality checks.
         HTTPException 500: If document generation fails.
     """
     result = await db.execute(
@@ -462,6 +463,8 @@ async def download_tailored_resume(
         )
     )
     tailored = result.scalar_one_or_none()
+    source_resume = None
+
     if tailored is None:
         # Graceful Sandbox fallback - fetch their actual uploaded resume!
         import logging
@@ -475,6 +478,7 @@ async def download_tailored_resume(
         actual_resume = resume_result.scalars().first()
         
         if actual_resume:
+            source_resume = actual_resume
             # Run the local mock tailoring engine dynamically on their actual data
             from app.services.ai_engine import _mock_resume_tailoring
             from app.services.ai_engine import _mock_jd_analysis
@@ -516,15 +520,28 @@ async def download_tailored_resume(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Resume not found. Please upload a resume first.",
             )
+    else:
+        # Standard path: fetch the source resume from DB
+        resume_result = await db.execute(
+            select(Resume).where(
+                Resume.id == tailored.resume_id,
+                Resume.user_id == current_user.id
+            )
+        )
+        source_resume = resume_result.scalar_one_or_none()
 
     fmt = body.format.lower()
     template = body.template or tailored.template
 
     try:
+        from app.services.final_resume_quality_gate import QualityGateValidationError
         if fmt == "pdf":
             content = await generate_pdf(
                 sections=tailored.tailored_sections,
                 template_name=template,
+                raw_text=source_resume.raw_text if source_resume else "",
+                original_sections=source_resume.parsed_sections if source_resume else None,
+                job_description=tailored.job_description if hasattr(tailored, "job_description") else "Software Engineer"
             )
             media_type = "application/pdf"
             extension = "pdf"
@@ -532,6 +549,9 @@ async def download_tailored_resume(
             content = await generate_docx(
                 sections=tailored.tailored_sections,
                 template_name=template,
+                raw_text=source_resume.raw_text if source_resume else "",
+                original_sections=source_resume.parsed_sections if source_resume else None,
+                job_description=tailored.job_description if hasattr(tailored, "job_description") else "Software Engineer"
             )
             media_type = (
                 "application/vnd.openxmlformats-officedocument"
@@ -543,6 +563,11 @@ async def download_tailored_resume(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Unsupported format: {fmt}. Use 'pdf' or 'docx'.",
             )
+    except QualityGateValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=exc.diagnostics
+        )
     except HTTPException:
         raise
     except Exception as exc:
@@ -561,3 +586,160 @@ async def download_tailored_resume(
             "Content-Disposition": f'attachment; filename="{filename}"',
         },
     )
+
+
+# ── V3 Career Employability Intelligence Routes ───────────────────
+
+from pydantic import BaseModel, Field
+
+class QuickTailorRequest(BaseModel):
+    """Request to tailor a resume using the persistent master profile evidence alone."""
+    job_url: str = Field(default="", description="Target job listing URL")
+    job_description: str = Field(default="", description="Target job description requirements")
+    job_title: str = Field(default="", description="Target job title")
+    company: str = Field(default="", description="Target company name")
+    template: str = Field(default="classic", description="Branded template: classic, modern, executive")
+    github_url: str = Field(default="", description="Optional candidate portfolio GitHub URL")
+    strategy_track: str = Field(default="backend", description="Chosen strategy track: backend, ai_ml, fullstack, data_science")
+
+
+@router.post(
+    "/quick-tailor",
+    status_code=status.HTTP_201_CREATED,
+    summary="Quickly optimize resume using master profile evidence alone",
+)
+async def quick_tailor_profile(
+    body: QuickTailorRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Scrapes job specs, loads candidate master evidence, assembles a grounded resume,
+    runs simulated ATS audits & recruiter scan heuristics, and updates profile memory.
+    """
+    from app.services.workflow_orchestrator import orchestrate_employability_pipeline
+    
+    try:
+        payload = await orchestrate_employability_pipeline(
+            db=db,
+            user_id=current_user.id,
+            job_url=body.job_url,
+            job_description=body.job_description,
+            job_title=body.job_title,
+            company=body.company,
+            template=body.template,
+            github_url=body.github_url,
+            strategy_track=body.strategy_track,
+            strict_mode=False  # Allow soft healings during quick tailors
+        )
+        return payload
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        )
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).error(f"Quick-Tailor pipeline failed: {exc}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Employability pipeline failed: {str(exc)}"
+        )
+
+
+@router.get(
+    "/profile/master",
+    summary="Get user persistent master profile evidence",
+)
+async def retrieve_user_master_profile(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Retrieve the whitelisted structured evidence database and career history memory for the active user."""
+    from app.services.user_resume_profile_engine import get_master_profile
+    from app.services.application_tracking_engine import get_applications_analytics
+    
+    profile = await get_master_profile(db, current_user.id)
+    if profile is None:
+        return {
+            "has_profile": False,
+            "structured_evidence": {},
+            "profile_memory": {},
+            "applications_log": {"applications": []},
+            "analytics": {"total_applied": 0, "callbacks": 0, "rejections": 0, "success_rate": 0.0}
+        }
+        
+    apps_log = profile.applications_log if isinstance(profile.applications_log, dict) else {"applications": []}
+    analytics = get_applications_analytics(apps_log)
+    
+    return {
+        "has_profile": True,
+        "structured_evidence": profile.structured_evidence,
+        "profile_memory": profile.profile_memory,
+        "master_resume_id": profile.master_resume_id,
+        "applications_log": apps_log,
+        "analytics": analytics,
+        "updated_at": profile.updated_at
+    }
+
+
+class LogApplicationRequest(BaseModel):
+    company: str
+    job_title: str
+    status: str = "applied"
+
+
+@router.post(
+    "/applications",
+    summary="Log a new job application in the tracker",
+)
+async def create_job_application(
+    body: LogApplicationRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Log a job application under the user's master resume profile."""
+    from app.services.application_tracking_engine import log_job_application
+    res = await log_job_application(
+        db=db,
+        user_id=current_user.id,
+        company=body.company,
+        job_title=body.job_title,
+        status=body.status
+    )
+    if not res.get("success"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=res.get("message", "Failed to log application")
+        )
+    return res
+
+
+class UpdateApplicationStatusRequest(BaseModel):
+    status: str
+
+
+@router.put(
+    "/applications/{application_id}",
+    summary="Update the status of a job application",
+)
+async def change_job_application_status(
+    application_id: str,
+    body: UpdateApplicationStatusRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update status of a logged application and trigger calibrations."""
+    from app.services.application_tracking_engine import update_application_status
+    res = await update_application_status(
+        db=db,
+        user_id=current_user.id,
+        application_id=application_id,
+        new_status=body.status
+    )
+    if not res.get("success"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=res.get("message", "Failed to update application status")
+        )
+    return res
+

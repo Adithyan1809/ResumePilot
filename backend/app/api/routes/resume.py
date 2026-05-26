@@ -4,6 +4,7 @@ Resume upload and management API routes.
 
 import os
 import uuid
+import logging
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
@@ -18,6 +19,7 @@ from app.schemas.resume import ResumeListResponse, ResumeListItem, ResumeRespons
 # Import heavy parsing function lazily inside the endpoint to avoid
 # requiring python-docx / pdfplumber at import time during startup.
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/resumes", tags=["resumes"])
 settings = get_settings()
 
@@ -111,6 +113,19 @@ async def upload_resume(
     db.add(resume)
     await db.commit()
     await db.refresh(resume)
+
+    # ── Initialize/Update Master Profile ─────────────────────────
+    try:
+        from app.services.user_resume_profile_engine import save_master_profile
+        await save_master_profile(
+            db=db,
+            user_id=current_user.id,
+            resume_id=resume.id,
+            parsed_sections=parsed_sections,
+            raw_text=raw_text
+        )
+    except Exception as exc:
+        logger.warning(f"Failed to auto-initialize master profile during upload: {exc}")
 
     return ResumeResponse.model_validate(resume)
 

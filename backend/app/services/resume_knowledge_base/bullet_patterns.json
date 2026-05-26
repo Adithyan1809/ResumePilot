@@ -1,0 +1,25 @@
+{
+  "Backend Development": [
+    "Engineered scalable backend service APIs in [LANG] using [FRAMEWORK], resulting in [METRIC] reduction in endpoint latency.",
+    "Spearheaded database query optimizations and caching layer integration via [DB] and [CACHE], reducing request bottlenecks by [METRIC].",
+    "Architected robust, thread-safe RESTful microservice gateways, securing [METRIC] concurrency capacity and seamless client-side schema bindings."
+  ],
+  "DevOps & Infrastructure": [
+    "Containerized application environments using [TOOL] multi-stage configurations, decreasing local onboarding boot times by [METRIC].",
+    "Automated end-to-end CI/CD release integrations via [CI_TOOL] and [CLOUD], increasing product shipping velocities by [METRIC].",
+    "Orchestrated cloud deployment migrations onto [CLOUD] infrastructures, maintaining [METRIC] high-availability SLA margins across operations."
+  ],
+  "Data Science & ML": [
+    "Designed and trained predictive [MODEL] analytics pipelines, boosting client classification accuracies to [METRIC] levels.",
+    "Ingested and preprocessed complex datasets containing [METRIC] data points, mining core behavioral correlations to guide strategic roadmap decisions.",
+    "Integrated live analytical metrics dashboards utilizing [VIS_TOOL], raising user session engagement margins by [METRIC]."
+  ],
+  "Computer Vision": [
+    "Spearheaded real-time object detection models integrating [MODEL] frameworks, improving model processing metrics by [METRIC].",
+    "Engineered custom video-stream ingestions, supporting [METRIC] concurrency processing levels with optimal canvas rendering latency."
+  ],
+  "General": [
+    "Refined critical software components using [LANG], delivering high-reliability integrations across cross-functional operations.",
+    "Collaborated on designing modular [FRAMEWORK] microservices, boosting operational efficiency parameters by [METRIC]."
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "FAANG": {
+    "bullet_density": "High (4-5 bullets per experience)",
+    "achievements_format": "Metric-first (e.g. Optimized X by Y% using Z)",
+    "whitespace_balance": "Optimal (10-15% margins)",
+    "typography": "Clean Sans-Serif or classic Serif",
+    "essential_keywords": ["scalability", "concurrency", "efficiency", "ownership", "optimization"]
+  },
+  "Startup": {
+    "bullet_density": "Medium (2-3 bullets per experience)",
+    "achievements_format": "Delivery-first (e.g. Designed, built, and shipped X using Y)",
+    "whitespace_balance": "High (15-20% margins)",
+    "typography": "Sleek Modern Sans-Serif",
+    "essential_keywords": ["velocity", "adaptability", "ownership", "shipped", "fullstack"]
+  },
+  "Internship": {
+    "bullet_density": "Medium (2-3 bullets)",
+    "achievements_format": "Detail-first (e.g. Worked with team on X to implement Y)",
+    "whitespace_balance": "High (20% margins)",
+    "typography": "Clean Minimalist",
+    "essential_keywords": ["collaborated", "gained", "fundamental", "academic", "assisted"]
+  }
+}

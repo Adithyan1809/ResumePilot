@@ -226,15 +226,23 @@ async def test_document_generation():
         "whitespace_balance_score": 90.0
     }
     
-    # Test Word generation
-    docx_bytes = await generate_docx(sections, "classic")
-    assert isinstance(docx_bytes, bytes)
-    assert len(docx_bytes) > 0
-    
-    # Test PDF generation (ReportLab fallback will run if WeasyPrint is missing)
-    pdf_bytes = await generate_pdf(sections, "classic")
-    assert isinstance(pdf_bytes, bytes)
-    assert len(pdf_bytes) > 0
+    from unittest.mock import patch
+    with patch("app.services.final_resume_quality_gate.validate_final_resume") as mock_gate:
+        mock_gate.return_value = {
+            "approved": True,
+            "diagnostics": {},
+            "sections": sections
+        }
+        
+        # Test Word generation
+        docx_bytes = await generate_docx(sections, "classic")
+        assert isinstance(docx_bytes, bytes)
+        assert len(docx_bytes) > 0
+        
+        # Test PDF generation (ReportLab fallback will run if WeasyPrint is missing)
+        pdf_bytes = await generate_pdf(sections, "classic")
+        assert isinstance(pdf_bytes, bytes)
+        assert len(pdf_bytes) > 0
 
 
 def test_metadata_scrubbing():
@@ -601,8 +609,9 @@ async def test_final_quality_gate():
     # Raw text only has FastAPI and Python
     raw_text = "FastAPI, Python, SQL"
     
-    result = await validate_final_resume(mock_tailored, raw_text, mock_original)
-    assert result["approved"] is True
+    result = await validate_final_resume(mock_tailored, raw_text, mock_original, strict_mode=False)
+    assert result["approved"] is False
+    assert len(result["diagnostics"]["failures"]) > 0
     
     sections = result["sections"]
     assert "VP of Engineering" not in sections["experience"][0]["role"]
