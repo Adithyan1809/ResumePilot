@@ -619,16 +619,23 @@ function CareerIntelPanel({ profile }) {
 function ScoreTrend({ items }) {
   if (!items.length) return null;
 
-  const scores = items.slice(0, 10).reverse().map((i) => i.overall_score || 0);
-  const max = Math.max(...scores, 1);
-  const min = Math.min(...scores, 0);
-  const range = max - min || 1;
+  const scores = items.slice(0, 15).reverse().map((i) => i.overall_score || 0);
+  
+  // Pad the min/max so the graph doesn't look overly dramatic for tiny changes
+  const actualMax = Math.max(...scores);
+  const actualMin = Math.min(...scores);
+  const max = Math.min(100, actualMax + 10);
+  const min = Math.max(0, actualMin - 10);
+  const range = (max - min) || 100;
 
-  const w = 280;
-  const h = 60;
+  // Use a high-res wide viewBox so preserveAspectRatio="none" distortion is minimized
+  const w = 1000;
+  const h = 100;
+  
+  // Calculate points
   const pts = scores.map((s, i) => {
-    const x = (i / (scores.length - 1)) * w;
-    const y = h - ((s - min) / range) * (h - 8) - 4;
+    const x = scores.length > 1 ? (i / (scores.length - 1)) * w : w / 2;
+    const y = h - ((s - min) / range) * (h - 10) - 5;
     return `${x},${y}`;
   });
 
@@ -651,32 +658,26 @@ function ScoreTrend({ items }) {
           {scores[scores.length - 1] || 0}%
         </div>
       </div>
-      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-16" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d={areaPath} fill="url(#scoreGrad)" />
-        <polyline
-          points={polyline}
-          fill="none"
-          stroke="#6366f1"
-          strokeWidth="2.5"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-        {scores.map((s, i) => (
-          <circle
-            key={i}
-            cx={(i / (scores.length - 1)) * w}
-            cy={h - ((s - min) / range) * (h - 8) - 4}
-            r="3.5"
-            fill="#6366f1"
+      <div className="w-full h-24 relative overflow-hidden rounded-lg">
+        <svg viewBox={`0 0 ${w} ${h}`} className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
+            </linearGradient>
+          </defs>
+          <path d={areaPath} fill="url(#scoreGrad)" />
+          <polyline
+            points={polyline}
+            fill="none"
+            stroke="#818cf8"
+            strokeWidth="3"
+            vectorEffect="non-scaling-stroke"
+            strokeLinejoin="round"
+            strokeLinecap="round"
           />
-        ))}
-      </svg>
+        </svg>
+      </div>
     </GlassCard>
   );
 }
