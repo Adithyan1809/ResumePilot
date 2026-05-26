@@ -1,39 +1,44 @@
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
 export const metadata = {
-  title: "ResumeAI — AI-Powered Resume Tailoring",
+  title: "ResumePilot — AI Employability Intelligence",
   description:
-    "Craft the perfect resume for every job application. AI-powered tailoring, ATS optimization, and intelligent suggestions to land your dream job.",
+    "The recruiter-grade AI career intelligence platform. Upload your master resume once, and let 75+ specialized engines optimize your trajectory.",
   keywords: [
     "resume",
     "AI",
     "ATS",
-    "job application",
-    "career",
-    "tailoring",
+    "career intelligence",
+    "employability",
+    "recruiter",
   ],
-  authors: [{ name: "ResumeAI" }],
+  authors: [{ name: "ResumePilot" }],
   openGraph: {
-    title: "ResumeAI — AI-Powered Resume Tailoring",
+    title: "ResumePilot — AI Employability Intelligence",
     description:
-      "Craft the perfect resume for every job application with AI-powered tailoring.",
+      "Upload your master resume once. Let AI optimize your career trajectory.",
     type: "website",
   },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`dark ${inter.variable}`} suppressHydrationWarning>
-      <body className="font-sans antialiased bg-surface-950 text-surface-100 min-h-screen" suppressHydrationWarning>
-        <AuthProvider>{children}</AuthProvider>
+    <html
+      lang="en"
+      className={`dark ${GeistSans.variable} ${GeistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body
+        className="font-sans antialiased min-h-screen"
+        suppressHydrationWarning
+      >
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

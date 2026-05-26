@@ -4,49 +4,50 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import Sidebar from "../../components/layout/Sidebar";
-import Spinner from "../../components/ui/Spinner";
+import { motion, AnimatePresence } from "framer-motion";
 
 /**
- * App Shell layout for dashboard routes, handling auth guards.
+ * App Shell — Premium dashboard layout with cinematic ambient lighting.
  */
 export default function AppShellLayout({ children }) {
   const router = useRouter();
   const { user, loading } = useAuth();
   const isInitialized = !loading;
 
-  // Route guarding
   useEffect(() => {
     if (isInitialized && !user) {
       router.push("/login");
     }
   }, [user, isInitialized, router]);
 
-  // Loading page block on initialization
   if (!isInitialized || !user) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center flex-col gap-4 text-center">
-        <Spinner size="lg" color="indigo" />
-        <span className="text-xs text-slate-500 font-bold uppercase tracking-widest animate-pulse">
-          Validating Session...
+      <div className="min-h-screen bg-[#09090b] flex items-center justify-center flex-col gap-4">
+        <div className="w-8 h-8 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
+        <span className="text-[10px] text-zinc-600 font-semibold uppercase tracking-[0.2em]">
+          Initializing
         </span>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-[#020617] overflow-hidden">
-      {/* Sidebar Panel */}
+    <div className="flex h-screen bg-[#09090b] overflow-hidden">
       <Sidebar />
 
-      {/* Main Viewport Container */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Glow accents */}
-        <div className="absolute top-0 right-0 w-[40rem] h-[40rem] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-0 left-10 w-[30rem] h-[30rem] rounded-full bg-purple-500/3 blur-[100px] pointer-events-none" />
+        {/* Ambient glow */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-indigo-500/[0.03] blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-purple-500/[0.02] blur-[100px] pointer-events-none" />
 
-        {/* Scrollable Viewport Frame */}
         <div className="flex-1 overflow-y-auto p-6 md:p-8 relative z-10 custom-scrollbar">
-          {children}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {children}
+          </motion.div>
         </div>
       </main>
     </div>
