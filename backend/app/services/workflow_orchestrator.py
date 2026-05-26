@@ -49,6 +49,16 @@ from app.services.branding_engine import generate_personal_branding
 from app.services.explainability_engine import generate_optimization_explanations
 from app.services.application_tracking_engine import get_applications_analytics
 
+# ── V4 Narrative & Humanization Engine Imports ──────────────────────────
+from app.services.candidate_voice_engine import preserve_candidate_voice
+from app.services.project_context_binding_engine import bind_project_context
+from app.services.engineering_identity_engine import establish_engineering_identity
+from app.services.resume_humanization_engine import humanize_resume_content
+from app.services.experience_calibration_engine import calibrate_experience_level
+from app.services.project_importance_ranker import rank_projects_by_importance
+from app.services.story_flow_engine import optimize_story_flow
+from app.services.metric_realism_engine import validate_metric_realism
+from app.services.recruiter_polish_engine import apply_recruiter_polish
 logger = logging.getLogger(__name__)
 
 
@@ -127,6 +137,10 @@ async def orchestrate_employability_pipeline(
     final_title = final_title or strategy_profile["role_title_target"]
 
     # 7. DETERMINISTIC EVIDENCE GRAPH ASSEMBLY
+    # 7.1 Engineering Identity
+    identity_report = establish_engineering_identity(structured_evidence, final_jd)
+    identity = identity_report["primary_identity"]
+    
     assembled_sections = assemble_tailored_resume(
         structured_evidence=structured_evidence,
         required_techs=required_techs,
@@ -137,12 +151,34 @@ async def orchestrate_employability_pipeline(
     assembled_sections["job_title"] = final_title
     assembled_sections["company"] = final_company
 
+    # 7.2 Strict Context Binding & Importance Ranking for Projects
+    if "projects" in assembled_sections:
+        bound_projects = bind_project_context(assembled_sections["projects"], focus_domain)
+        ranked_projects = rank_projects_by_importance(bound_projects, final_jd, identity)
+        assembled_sections["projects"] = ranked_projects
+
+    # 7.3 Experience Calibration, Metric Realism, Candidate Voice, and Humanization
+    for section_key in ["experience", "projects"]:
+        if section_key in assembled_sections:
+            for item in assembled_sections[section_key]:
+                bullets = item.get("bullets", [])
+                if bullets:
+                    b1 = calibrate_experience_level(bullets, seniority)
+                    b2 = validate_metric_realism(b1, seniority)
+                    b3 = preserve_candidate_voice(b2, seniority)
+                    b4 = humanize_resume_content(b3)
+                    item["bullets"] = b4
+
     # 8. ROUTE POLISHING TO MULTI-MODEL ROUTER
     polished_summary = await route_and_call_llm(
-        prompt=f"Polish this resume summary professionally: '{assembled_sections['summary']}' for the role of {final_title} at {final_company}. Keep it fully grounded in these skills: {', '.join(required_techs[:4])}.",
+        prompt=f"Polish this resume summary professionally: '{assembled_sections.get('summary', '')}' for the role of {final_title} at {final_company}. Keep it fully grounded in these skills: {', '.join(required_techs[:4])}.",
         task_type="summarization"
     )
     assembled_sections["summary"] = polished_summary
+
+    # 8.1 Story Flow & Recruiter Polish
+    assembled_sections = optimize_story_flow(assembled_sections, identity)
+    assembled_sections = apply_recruiter_polish(assembled_sections)
 
     # 9. CONFIGURE TEMPLATE PERSONALITY STYLING
     styling_profile = configure_template_styling(template)
