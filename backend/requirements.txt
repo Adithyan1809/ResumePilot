@@ -18,7 +18,7 @@ bcrypt==4.2.1
 openai==1.58.1
 
 # NLP
-spacy==3.7.4
+spacy==3.7.2
 scikit-learn
 
 # Semantic Similarity
