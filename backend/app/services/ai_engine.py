@@ -16,7 +16,7 @@ ensuring zero downtime in evaluation environments.
 import json
 import logging
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from openai import AsyncOpenAI
 
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
-def get_grok_client() -> AsyncOpenAI | None:
+def get_grok_client() -> Optional[AsyncOpenAI]:
     """Retrieve the Async OpenAI client configured for the primary endpoint."""
     if not settings.GROK_API_KEY:
         logger.warning("GROK_API_KEY not configured. Falling back to local offline mock engines.")
@@ -51,7 +51,7 @@ def get_grok_client() -> AsyncOpenAI | None:
         return None
 
 
-def get_fallback_client() -> AsyncOpenAI | None:
+def get_fallback_client() -> Optional[AsyncOpenAI]:
     """Retrieve the Async OpenAI client configured for the fallback endpoint."""
     if not settings.FALLBACK_API_KEY:
         return None
