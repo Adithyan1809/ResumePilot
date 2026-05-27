@@ -11,7 +11,7 @@ def test_parse_structured_project_line():
     assert len(projects) == 1
     p = projects[0]
     assert p["name"] == "Smart Camera"
-    assert "camera processing pipeline" in p["description"]
+    assert any("camera processing pipeline" in d for d in p["description"])
     assert "Python" in p["technologies"] or "OpenCV" in p["technologies"]
 
 
@@ -24,4 +24,4 @@ def test_parse_fallback_project_block():
     assert len(projects) == 1
     p = projects[0]
     assert "Smart Camera" in p["name"]
-    assert "camera processing" in p["description"].lower()
+    assert any("camera processing" in d.lower() for d in p["description"])

@@ -710,6 +710,13 @@ def _parse_projects(lines: list[str]) -> list[Dict[str, Any]]:
         # Remove (cid:X) tags
         name = re.sub(r"\(cid:\d+\)", "", name).strip()
         
+        # Handle single-line projects
+        if len(block_lines) == 1:
+            parts = re.split(r"\s+[-|]\s+", name)
+            if len(parts) > 1:
+                name = parts[0].strip()
+                block_lines.extend([p.strip() for p in parts[1:]])
+        
         # Extract GitHub link
         link = ""
         for line in block_lines:
@@ -729,7 +736,7 @@ def _parse_projects(lines: list[str]) -> list[Dict[str, Any]]:
                 continue
                 
             # Check if this line is tech stack
-            tech_match = re.search(r"\b(technologies|tech stack|built with|tools?):\s*(.*)\b", line_cleaned, re.IGNORECASE)
+            tech_match = re.search(r"\b(tech|technologies|tech stack|built with|tools?):\s*(.*)\b", line_cleaned, re.IGNORECASE)
             if tech_match:
                 tech_vals = tech_match.group(2)
                 technologies = [t.strip() for t in re.split(r"[,;•|]+", tech_vals) if t.strip()]
