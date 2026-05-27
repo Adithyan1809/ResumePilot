@@ -170,21 +170,6 @@ def normalize_project_name(name: str) -> str:
     
     # 5. Convert to Title Case
     name = name.title()
-    
-    # 6. Add standard suffix if too brief or if it needs professional staging
-    words = name.split()
-    if len(words) == 0:
-        return "Engineering Project"
-    elif len(words) == 1:
-        name = f"{name} Application"
-    elif not any(suffix in name.lower() for suffix in ["system", "engine", "platform", "gateway", "service", "analytics", "tracker", "dashboard", "tool", "app", "application", "model", "pipeline", "framework", "vision", "automation"]):
-        # Add a professional staging suffix
-        if any(kw in name.lower() for kw in ["predict", "classification", "forecast", "learning"]):
-            name = f"{name} Model"
-        elif any(kw in name.lower() for kw in ["surveillance", "gateway", "api", "auth", "security", "stream", "network"]):
-            name = f"{name} System"
-        else:
-            name = f"{name} Project"
             
     return name
 
