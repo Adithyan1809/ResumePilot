@@ -121,7 +121,7 @@ def _extract_docx_text(file_path: str) -> str:
     for para in doc.paragraphs:
         if para.text.strip():
             paragraphs.append(para.text)
-    
+
     # Process tables as well
     for table in doc.tables:
         # Attempt to detect column headers to handle project tables
@@ -213,7 +213,7 @@ def _extract_docx_text(file_path: str) -> str:
 def _parse_contact_info(text: str) -> Dict[str, Any]:
     """Parse contact info like Name, Email, Phone, URLs from the first few lines of text."""
     lines = [line.strip() for line in text.split("\n") if line.strip()][:10]
-    
+
     # Simple name heuristic: first non-empty line that doesn't contain contact symbols
     name = "Candidate Name"
     for line in lines:
@@ -259,11 +259,11 @@ def _parse_contact_info(text: str) -> Dict[str, Any]:
 def _segment_sections(text: str, contact_info: Dict[str, Any]) -> Dict[str, Any]:
     """Segment resume text into standard sections based on keywords and header rules."""
     lines = text.split("\n")
-    
+
     sections: Dict[str, list] = {k: [] for k in SECTION_PATTERNS.keys()}
     sections["header"] = []
     current_section = "header"  # start in "header" section
-    
+
     for line in lines:
         line_stripped = line.strip()
         if not line_stripped:
@@ -278,7 +278,7 @@ def _segment_sections(text: str, contact_info: Dict[str, Any]) -> Dict[str, Any]
                     current_section = section_name
                     is_header = True
                     break
-        
+
         if not is_header:
             sections[current_section].append(line)
 
@@ -286,34 +286,34 @@ def _segment_sections(text: str, contact_info: Dict[str, Any]) -> Dict[str, Any]
     raw_experience = _parse_experience(sections["experience"])
     education_entries = _parse_education(sections["education"])
     projects_entries = _parse_projects(sections["projects"])
-    
+
     # Auto-routing projects listed under experience to the projects section
     experience_entries = []
     for entry in raw_experience:
         role = entry.get("role", "")
         company = entry.get("company", "")
         bullets = entry.get("bullets", [])
-        
+
         # Check if this is actually a project
         is_project = False
-        if any(kw in role.lower() or kw in company.lower() for kw in ["project", "airbnb", "prediction", "dataset", "classifier", "model", "segmentation", "recognition", "detection", "neural network", "regression", "classification"]):
+        if any(kw in role.lower() or kw in company.lower() for kw in ["project", "airbnb", "prediction", "dataset", "classifier", "model", "segmentation", "recognition", "detection", "neural netw"]):
             is_project = True
-            
+
         if is_project:
             # Extract clean project name
             p_name = company
             if p_name == "Various Companies" or len(p_name) < 4 or any(kw in p_name.lower() for kw in ["researcher", "engineer", "developer", "intern"]):
                 p_name = role
-                
+
             if "project" in p_name.lower():
                 p_name = re.sub(r"^.*?project\s*", "", p_name, flags=re.IGNORECASE)
             if "researcher" in p_name.lower():
                 p_name = re.sub(r"^.*?researcher\s*", "", p_name, flags=re.IGNORECASE)
-                
+
             p_name = re.sub(r"^[\s\-–—,|]+|[\s\-–—,|]+$", "", p_name).strip()
             if not p_name:
                 p_name = role
-                
+
             projects_entries.append({
                 "name": p_name,
                 "technologies": [],
@@ -322,7 +322,7 @@ def _segment_sections(text: str, contact_info: Dict[str, Any]) -> Dict[str, Any]
             })
         else:
             experience_entries.append(entry)
-    
+
     skills_raw = "\n".join(sections["skills"])
     skills_list = [s.strip() for s in re.split(r"[,;•\n|]+", skills_raw) if s.strip() and len(s.strip()) < 40]
 
@@ -352,7 +352,7 @@ def _segment_sections(text: str, contact_info: Dict[str, Any]) -> Dict[str, Any]
         email_lower = contact_info.get("email", "").lower()
         phone = contact_info.get("phone", "")
         location_lower = contact_info.get("location", "").lower()
-        
+
         for line in sections["header"]:
             l_strip = line.strip()
             l_lower = l_strip.lower()
@@ -397,7 +397,7 @@ def _segment_sections(text: str, contact_info: Dict[str, Any]) -> Dict[str, Any]
 def clean_role_company(role: str, company: str) -> tuple[str, str]:
     role = role.strip()
     company = company.strip()
-    
+
     # 1. Resolve merge contamination bugs (e.g. company is "Various Companies" but role contains delimiter)
     if company.lower() in ["various companies", "various", ""] or not company:
         # Check if role contains a delimiter like ",", "@", "at", "—"
@@ -410,25 +410,25 @@ def clean_role_company(role: str, company: str) -> tuple[str, str]:
                     role = potential_role
                     company = potential_company
                     break
-                    
+
     role_keywords = [
-        "lead", "engineer", "developer", "analyst", "intern", "manager", "specialist", 
-        "researcher", "consultant", "architect", "designer", "programmer", "head", 
+        "lead", "engineer", "developer", "analyst", "intern", "manager", "specialist",
+        "researcher", "consultant", "architect", "designer", "programmer", "head",
         "director", "coordinator", "officer", "administrator"
     ]
     role_lower = role.lower()
     company_lower = company.lower()
-    
+
     # Swap check: if first part is very short or looks like a company name and second has role keywords
     has_role_in_company = any(re.search(rf"\b{kw}\b", company_lower) for kw in role_keywords)
     has_role_in_role = any(re.search(rf"\b{kw}\b", role_lower) for kw in role_keywords)
-    
+
     if has_role_in_company and not has_role_in_role:
         role, company = company, role
         role_lower, company_lower = role.lower(), company.lower()
         has_role_in_role = True
         has_role_in_company = False
-        
+
     # De-duplication of role name inside company name
     if role_lower and company_lower:
         company = re.sub(rf"^\b{re.escape(role_lower)}\b[\s\-–—,|]*", "", company, flags=re.IGNORECASE).strip()
@@ -438,10 +438,10 @@ def clean_role_company(role: str, company: str) -> tuple[str, str]:
             company = company.replace(role.title(), "").strip()
             company = company.replace(role.upper(), "").strip()
             company = company.replace(role.lower(), "").strip()
-            
+
         company = re.sub(r"^[\s\-–—,|]+|[\s\-–—,|]+$", "", company).strip()
         company_lower = company.lower()
-        
+
     # E.g. Role: "Intern", Company: "Data Analyst Intern Company B" -> Role: "Data Analyst Intern", Company: "Company B"
     if role_lower == "intern" and "intern" in company_lower:
         match = re.search(r"\b([a-zA-Z\s]+intern)\b", company_lower)
@@ -454,16 +454,16 @@ def clean_role_company(role: str, company: str) -> tuple[str, str]:
             else:
                 company = comp_clean.title()
             role = matched_role
-            
+
     # Clean leading/trailing punctuation
     role = re.sub(r"^[\s\-–—,|]+|[\s\-–—,|]+$", "", role).strip()
     company = re.sub(r"^[\s\-–—,|]+|[\s\-–—,|]+$", "", company).strip()
-    
+
     if not role:
         role = "Software Engineer"
     if not company:
         company = "Various Companies"
-        
+
     return role, company
 
 
@@ -471,61 +471,61 @@ def _parse_experience(lines: list[str]) -> list[Dict[str, Any]]:
     """Helper to convert experience text lines into structured entries using smart sequential boundary detection."""
     if not lines:
         return []
-        
+
     cleaned_lines = [l.strip() for l in lines if l.strip()]
     if not cleaned_lines:
         return []
-        
+
     # 1. Split lines into distinct job blocks using sequential scanning
     blocks = []
     current_block = []
-    
+
     role_keywords = [
-        "engineer", "developer", "lead", "architect", "analyst", "intern", "manager", 
-        "specialist", "researcher", "consultant", "director", "coordinator", "officer", 
+        "engineer", "developer", "lead", "architect", "analyst", "intern", "manager",
+        "specialist", "researcher", "consultant", "director", "coordinator", "officer",
         "administrator", "process engineer", "lead developer", "lead architect"
     ]
-    
+
     for line in cleaned_lines:
         is_boundary = False
         is_bullet = bool(re.match(r"^[\s\-•\*·]+\s*", line))
-        
+
         if not is_bullet and len(line) < 120:
-            has_dates = bool(re.search(r"\b\d{4}\b|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)\b", line, re.IGNORECASE))
+            has_dates = bool(re.search(r"\b\d{4}\b|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)\b", line))
             has_dash = any(sep in line for sep in ["—", "–", "―", "|"])
             line_lower = line.lower()
             has_role_kw = any(re.search(rf"\b{kw}\b", line_lower) for kw in role_keywords)
-            
+
             if (has_dash and has_dates) or (has_dash and has_role_kw) or (has_dates and has_role_kw) or ("company" in line_lower) or ("project" in line_lower):
                 is_boundary = True
-                
+
         if is_boundary and current_block:
             blocks.append(current_block)
             current_block = []
-            
+
         current_block.append(line)
-        
+
     if current_block:
         blocks.append(current_block)
-        
+
     # 2. Parse each block into a structured entry
     entries = []
     for block_lines in blocks:
         if not block_lines:
             continue
-            
+
         header = block_lines[0].strip()
         bullets_start_idx = 1
-        
+
         # Heuristic for multi-line headers: role and company split across two lines
         if len(block_lines) > 1:
             second_line = block_lines[1].strip()
             is_bullet = bool(re.match(r"^[\s\-•\*·]+\s*", second_line))
             if not is_bullet and len(second_line) < 60:
-                role_keywords = ["engineer", "developer", "lead", "architect", "analyst", "intern", "manager", "specialist", "researcher", "consultant", "director", "coordinator", "officer", "administrator"]
+                role_keywords = ["engineer", "developer", "lead", "architect", "analyst", "intern", "manager", "specialist", "researcher", "consultant", "director", "coordinator", "officer", "adm"]
                 has_role_first = any(kw in header.lower() for kw in role_keywords)
                 has_role_second = any(kw in second_line.lower() for kw in role_keywords)
-                
+
                 if has_role_second and not has_role_first:
                     header = f"{second_line} — {header}"
                     bullets_start_idx = 2
@@ -542,7 +542,7 @@ def _parse_experience(lines: list[str]) -> list[Dict[str, Any]]:
             line_clean = l.strip()
             if not line_clean:
                 continue
-                
+
             is_new_bullet = False
             # Starts with bullet marker
             if re.match(r"^(?:-+|•+|\*+|·+|\(cid:\d+\))\s*", line_clean):
@@ -553,52 +553,52 @@ def _parse_experience(lines: list[str]) -> list[Dict[str, Any]]:
                 prev_bullet = bullets[-1].strip()
                 if prev_bullet and prev_bullet[-1] in [".", "!", "?"]:
                     is_new_bullet = True
-                    
+
             clean_b = re.sub(r"^(?:-+|•+|\*+|·+|\(cid:\d+\))\s*", "", line_clean)
             clean_b = re.sub(r"\(cid:\d+\)", "", clean_b).strip()
-            
+
             if is_new_bullet:
                 bullets.append(clean_b)
             else:
                 bullets[-1] = heal_bullet_text(bullets[-1], clean_b)
-                
+
         # Parse header for dates (like 2020 - 2022, or Jan 2021 - Present)
-        date_pattern = r"[\(\[\s]*\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December|\d{1,2}/\d{2,4})\s*\d{4}\s*[-–—]\s*(?:Present|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December|\d{1,2}/\d{2,4})\s*\d{4}|\d{4})\b[\)\]\s]*|[\(\[\s]*\b\d{4}\s*[-–—]\s*(?:\d{4}|Present)\b[\)\]\s]*"
+        date_pattern = r"[\(\[\s]*\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December|\d{1,2}/\d{2,4})\s*\d{"
         dates = ""
         date_match = re.search(date_pattern, header)
         if date_match:
             dates = date_match.group(0)
             header = header.replace(dates, "").strip()
-            
+
         # Remove empty parentheses/brackets left over from date extraction
         header = re.sub(r"\(\s*\)", "", header).strip()
         header = re.sub(r"\[\s*\]", "", header).strip()
         # Clean trailing separators
         header = re.sub(r"[\s\-–—,|]+$", "", header).strip()
- 
+
         # Parse role and company from header using all delimiters
         delimiters = [r"\|", r"–", r"—", r"―", r"\s+-\s+", r"\bat\b", r"\bfor\b", r"\b@\b"]
         delims_regex = "|".join(delimiters)
         parts = re.split(delims_regex, header, maxsplit=1, flags=re.IGNORECASE)
-        
+
         if len(parts) == 2:
             role = parts[0].strip()
             company = parts[1].strip()
         else:
             role = header.strip()
             company = "Various Companies"
-            
+
         # Run smart role-company de-duplication and swap cleanup heuristics
         role, company = clean_role_company(role, company)
- 
+
         if not bullets and len(block_lines) > bullets_start_idx:
             # If bullet points aren't prefixed, just treat them as list entries
             bullets = [line.strip() for line in block_lines[bullets_start_idx:]]
- 
+
         entries.append({
             "company": company,
             "role": role,
-            "dates": re.sub(r"^[\(\[\s,]+|[\)\]\s,]+$", "", dates).strip(), # clean dates punctuation
+            "dates": re.sub(r"^[\(\[\s,]+|[\)\]\s,]+$", "", dates).strip(),
             "bullets": bullets if bullets else ["Performed daily duties as part of the core operational team."]
         })
 
@@ -610,15 +610,15 @@ def _parse_education(lines: list[str]) -> list[Dict[str, Any]]:
     text = "\n".join(lines)
     if not text.strip():
         return []
-    
+
     blocks = re.split(r"\n\n+", text)
     entries = []
-    
+
     for block in blocks:
         block_lines = [l.strip() for l in block.split("\n") if l.strip()]
         if not block_lines:
             continue
-        
+
         header = block_lines[0]
         # Look for dates
         date_match = re.search(r"\b\d{4}(?:\s*-\s*(?:\d{4}|Present))?\b", header)
@@ -646,30 +646,30 @@ def _parse_education(lines: list[str]) -> list[Dict[str, Any]]:
             "dates": dates,
             "gpa": gpa,
         })
-    
+
     return entries
 
 
 def _parse_projects(lines: list[str]) -> list[Dict[str, Any]]:
-    """Helper to convert projects text into structured entries with smart boundary detection."""
+    """Helper to convert projects text lines into structured entries with smart boundary detection."""
     if not lines:
         return []
-        
+
     cleaned_lines = [l.strip() for l in lines if l.strip()]
     if not cleaned_lines:
         return []
-        
+
     project_blocks = []
     current_block = []
-    
+
     # Smart boundary detection
     for idx, line in enumerate(cleaned_lines):
         is_boundary = False
-        
+
         # Rule 1: Starts with explicit project keyword
         if re.match(r"^project\b", line, re.IGNORECASE) and not re.search(r"bullet|description|detail", line, re.IGNORECASE):
             is_boundary = True
-            
+
         # Rule 2: Short line and next line starts with Tech Stack or bullet points, and we already have some lines in current block
         elif current_block and len(line) < 50 and not line.startswith(("-", "•", "*", "•")):
             # Check if next line contains Tech Stack / Technologies / Tools / Built with
@@ -679,43 +679,46 @@ def _parse_projects(lines: list[str]) -> list[Dict[str, Any]]:
                 next_line.startswith(("-", "•", "*", "•"))
             ):
                 is_boundary = True
-                
+
         # Rule 3: Contains a GitHub URL at the start or on a short line
         elif "github.com/" in line.lower() and len(line) < 80 and current_block:
             # If the current block already has description bullets, this github URL is likely the start of a new project header
             has_bullets = any(l.startswith(("-", "•", "*")) for l in current_block)
             if has_bullets:
                 is_boundary = True
-                
+
         if is_boundary and current_block:
             project_blocks.append(current_block)
             current_block = []
-            
+
         current_block.append(line)
-        
+
     if current_block:
         project_blocks.append(current_block)
-        
+
     entries = []
     for block_lines in project_blocks:
         if not block_lines:
             continue
-            
+
         # Parse the block
         name = block_lines[0]
-        # Clean prefix like "Project:", "Personal Project:"
-        name = re.sub(r"^(project|personal project|academic project|selected project):\s*", "", name, flags=re.IGNORECASE)
+
+        # IMPORTANT: Strip common prefixes like "Project:" so callers/tests get the clean title.
+        # This prevents failures like: expected "Smart Camera" but got "Project: Smart Camera".
+        name = re.sub(r"^(project|projects|personal project|academic project|selected project)\s*:\s*", "", name, flags=re.IGNORECASE)
+
         # Clean trailing separators
         name = re.sub(r"[\s\-\|]+$", "", name).strip()
         # Remove (cid:X) tags
         name = re.sub(r"\(cid:\d+\)", "", name).strip()
-        
+
         # Try to split the name from a trailing summary if there is a common delimiter
         parts = re.split(r"\s+[-|]\s+", name, maxsplit=1)
         if len(parts) > 1:
             name = parts[0].strip()
             block_lines.insert(1, parts[1].strip())
-        
+
         # Extract GitHub link
         link = ""
         for line in block_lines:
@@ -724,50 +727,50 @@ def _parse_projects(lines: list[str]) -> list[Dict[str, Any]]:
                 if urls:
                     link = urls[0]
                     break
-                    
+
         # Extract technologies and build clean description bullets
         technologies = []
         bullets = []
-        
+
         for line in block_lines[1:]:
             line_cleaned = re.sub(r"\(cid:\d+\)", "", line).strip()
             if not line_cleaned:
                 continue
-                
+
             # Check if this line is tech stack
             tech_match = re.search(r"\b(tech|technologies|tech stack|built with|tools?):\s*(.*)\b", line_cleaned, re.IGNORECASE)
             if tech_match:
                 tech_vals = tech_match.group(2)
                 technologies = [t.strip() for t in re.split(r"[,;•|]+", tech_vals) if t.strip()]
-                
+
                 # If there's text before the tech stack, preserve it as a bullet
                 prefix = line_cleaned[:tech_match.start()].strip()
                 prefix = re.sub(r"[\s\-\|]+$", "", prefix).strip()
                 if prefix:
                     bullets.append(prefix)
                 continue
-                
+
             # If it's a URL and we already saved it, skip or don't put in bullets
             if link and link in line_cleaned and len(line_cleaned) < 80:
                 continue
-                
+
             # Clean bullets prefix
             clean_b = re.sub(r"^[\s\-•\*]+\s*", "", line_cleaned).strip()
             if clean_b:
                 bullets.append(clean_b)
-                
+
         # Title cleanups via normalize_project_name from github_service
         try:
             from app.services.github_service import normalize_project_name
             name = normalize_project_name(name)
         except Exception:
             pass
-            
+
         entries.append({
             "name": name,
             "technologies": technologies,
             "description": bullets,
             "link": link
         })
-        
+
     return entries
