@@ -710,12 +710,11 @@ def _parse_projects(lines: list[str]) -> list[Dict[str, Any]]:
         # Remove (cid:X) tags
         name = re.sub(r"\(cid:\d+\)", "", name).strip()
         
-        # Handle single-line projects
-        if len(block_lines) == 1:
-            parts = re.split(r"\s+[-|]\s+", name)
-            if len(parts) > 1:
-                name = parts[0].strip()
-                block_lines.extend([p.strip() for p in parts[1:]])
+        # Try to split the name from a trailing summary if there is a common delimiter
+        parts = re.split(r"\s+[-|]\s+", name, maxsplit=1)
+        if len(parts) > 1:
+            name = parts[0].strip()
+            block_lines.insert(1, parts[1].strip())
         
         # Extract GitHub link
         link = ""
@@ -740,6 +739,12 @@ def _parse_projects(lines: list[str]) -> list[Dict[str, Any]]:
             if tech_match:
                 tech_vals = tech_match.group(2)
                 technologies = [t.strip() for t in re.split(r"[,;•|]+", tech_vals) if t.strip()]
+                
+                # If there's text before the tech stack, preserve it as a bullet
+                prefix = line_cleaned[:tech_match.start()].strip()
+                prefix = re.sub(r"[\s\-\|]+$", "", prefix).strip()
+                if prefix:
+                    bullets.append(prefix)
                 continue
                 
             # If it's a URL and we already saved it, skip or don't put in bullets
