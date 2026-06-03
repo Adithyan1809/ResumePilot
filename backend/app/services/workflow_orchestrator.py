@@ -213,7 +213,17 @@ async def orchestrate_employability_pipeline(
     ats_score = ats_sim["ats_compatibility_score"]
     
     # B. Semantic Vector similarity calculation
-    flat_healed = " ".join([healed_sections.get("summary", ""), " ".join(healed_sections.get("skills", {}).get("Tools", []))])
+    summary_txt = healed_sections.get("summary", "")
+    summary_txt = summary_txt.get("text", "") if isinstance(summary_txt, dict) else str(summary_txt)
+    skills_obj = healed_sections.get("skills", [])
+    skills_list = []
+    if isinstance(skills_obj, dict):
+        for v in skills_obj.values():
+            if isinstance(v, list):
+                skills_list.extend([str(item) for item in v])
+    elif isinstance(skills_obj, list):
+        skills_list.extend([s.get("text", "") if isinstance(s, dict) else str(s) for s in skills_obj])
+    flat_healed = summary_txt + " " + " ".join(skills_list)
     semantic_score = calculate_semantic_similarity(flat_healed, final_jd)
     
     # C. Recruiter glance scan heatmap coordinates

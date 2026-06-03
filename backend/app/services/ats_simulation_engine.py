@@ -36,7 +36,19 @@ def simulate_ats_parsing(sections: Dict[str, Any], template: str) -> Dict[str, A
         base_compatibility -= len(missing_standards) * 5.0
 
     # 3. Inspect Text Density and Keyword volumes
-    flat_text = str(sections.get("summary", "")) + " " + " ".join(sections.get("skills", []))
+    summary_obj = sections.get("summary", "")
+    summary_text = summary_obj.get("text", "") if isinstance(summary_obj, dict) else str(summary_obj)
+    
+    skills_obj = sections.get("skills", [])
+    skills_list = []
+    if isinstance(skills_obj, dict):
+        for v in skills_obj.values():
+            if isinstance(v, list):
+                skills_list.extend([str(item) for item in v])
+    elif isinstance(skills_obj, list):
+        skills_list.extend([s.get("text", "") if isinstance(s, dict) else str(s) for s in skills_obj])
+        
+    flat_text = summary_text + " " + " ".join(skills_list)
     word_count = len(flat_text.split())
     
     if word_count < 50:
