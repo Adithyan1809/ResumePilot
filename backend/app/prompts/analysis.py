@@ -3,29 +3,51 @@ Job description analysis prompts.
 """
 
 JD_ANALYSIS_PROMPT = """
-Analyze the following Job Description and extract structural information, required skills, core responsibilities, and key tools. 
+You are a technical recruiter. Analyze this job description and extract structured requirements.
 
-Respond strictly in JSON format matching the schema below:
-{{
-    "job_title": "The exact or normalized job title",
-    "company": "The company name (leave empty if not mentioned)",
-    "required_hard_skills": [
-        "Core technical skills required, e.g., Python, Kubernetes, AWS, SQL"
-    ],
-    "required_soft_skills": [
-        "Core soft skills, e.g., Leadership, Communication, Agile methodologies"
-    ],
-    "required_tools_and_technologies": [
-        "Specific software tools, platforms, or libraries mentioned, e.g., Docker, Scikit-learn, Jira"
-    ],
-    "core_responsibilities": [
-        "Summary of the primary expectations of this role (keep them brief and concise)"
-    ],
-    "experience_level_expectation": "e.g., Entry, Mid, Senior, Lead, Executive"
-}}
-
-Ensure your response is valid JSON with NO additional text outside of the JSON block.
-
-Job Description:
+<job_description>
 {job_description}
+</job_description>
+
+Respond ONLY in this JSON format:
+{{
+    "must_have_skills": ["skill1", "skill2"],
+    "nice_to_have_skills": ["skill3"],
+    "key_responsibilities": ["responsibility1", "responsibility2"],
+    "domain_keywords": ["keyword1", "keyword2"],
+    "seniority_level": "internship/junior/mid/senior",
+    "core_role_type": "backend/data-science/ml/fullstack/devops/frontend/etc"
+}}
+"""
+
+CRITIQUE_PROMPT = """
+You are a senior technical recruiter reviewing a tailored resume section.
+
+Job Description Keywords: {jd_keywords}
+Generated Content: {generated_content}
+
+Evaluate each bullet or sentence on:
+1. SPECIFICITY (1-5): Does it mention exact tools, architectures, and outcomes?
+2. JD ALIGNMENT (1-5): Does it reflect the JD's priority keywords?
+3. ACTION STRENGTH (1-5): Does it start with a powerful, unique verb?
+4. FABRICATION RISK (pass/fail): Does it invent anything not in the whitelist?
+
+For any score below 4, rewrite that item to improve it.
+
+Respond ONLY in JSON format:
+{{
+    "scores": [
+        {{
+            "original": "text of bullet",
+            "specificity": 4,
+            "jd_alignment": 5,
+            "action_strength": 3,
+            "fabrication_risk": "pass",
+            "rewritten": "Improved bullet text..."
+        }}
+    ],
+    "refined_content": [
+        "The final improved list of bullets or summary text"
+    ]
+}}
 """

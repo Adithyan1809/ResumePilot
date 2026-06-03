@@ -211,3 +211,17 @@ def extract_evidence_from_parsed_sections(parsed_sections: Dict[str, Any]) -> Di
         })
 
     return evidence
+
+def build_weighted_whitelist(resume_techs: List[str], jd_techs: List[str]) -> str:
+    """Builds a weighted 3-tier technology whitelist to prevent hallucination while matching JD priority."""
+    resume_lower = [t.lower().strip() for t in resume_techs if t]
+    jd_lower = [t.lower().strip() for t in jd_techs if t]
+    
+    overlap = sorted(list(set(t for t in resume_lower if t in jd_lower)))
+    resume_only = sorted(list(set(t for t in resume_lower if t not in jd_lower)))
+    
+    return f"""
+    HIGH PRIORITY (in both resume and JD — use these prominently): {overlap}
+    AVAILABLE (in resume only — use if relevant): {resume_only}
+    DO NOT USE: anything not in the above two lists
+    """
