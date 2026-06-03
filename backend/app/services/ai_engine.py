@@ -245,11 +245,18 @@ async def tailor_resume_sections(
     
     # Extract allowed technologies for prompt whitelisting
     from app.services.technology_grounding_engine import extract_allowed_technologies
+    from app.services.evidence_storage_engine import build_weighted_whitelist
+    
     raw_src_text = parsed_sections.get("summary", "")
     for entry in parsed_sections.get("experience", []) or []:
         raw_src_text += "\n" + "\n".join(entry.get("bullets", []))
     allowed_techs = extract_allowed_technologies(raw_src_text, github_techs=[])
-    allowed_techs_str = ", ".join(allowed_techs) if allowed_techs else "Python, SQL, Git"
+    
+    required_techs = jd_analysis.get("required_techs", [])
+    if not required_techs:
+        required_techs = jd_analysis.get("required_hard_skills", []) + jd_analysis.get("required_tools_and_technologies", [])
+        
+    allowed_techs_str = build_weighted_whitelist(allowed_techs, required_techs)
     
     if get_grok_client() is None and get_fallback_client() is None:
         logger.warning("No LLM providers configured. Using local offline mock engines.")
@@ -278,10 +285,11 @@ async def tailor_resume_sections(
     except Exception as exc:
         logger.error(f"Summary tailoring failed: {exc}")
 
-    # 2. Tailor Experience Bullet Points
+    # 2. Tailor Experience Bullet Points & Critique Loop
     try:
         # Pre-hydrate weak bullets using our achievement extractor before sending to LLM
         from app.services.achievement_extractor import pre_hydrate_bullet
+        from app.prompts.analysis import CRITIQUE_PROMPT
         skills_list = parsed_sections.get("skills", [])
         
         hydrated_exp = []
@@ -307,7 +315,26 @@ async def tailor_resume_sections(
             json_mode=True,
         )
         exp_data = json.loads(content)
-        exp_entries = exp_data.get("experience", hydrated_exp)
+        tailored_exp = exp_data.get("experience", hydrated_exp)
+        
+        # --- Critique Loop ---
+        critique_prompt = CRITIQUE_PROMPT.format(
+            jd_keywords=", ".join(jd_analysis.get("required_techs", [])[:10] if "required_techs" in jd_analysis else []),
+            generated_content=json.dumps(tailored_exp, indent=2)
+        )
+        critique_content = await _call_llm_completion(
+            messages=[
+                {"role": "system", "content": "You are a Senior Technical Recruiter grading resume bullets."},
+                {"role": "user", "content": critique_prompt},
+            ],
+            temperature=0.0,
+            json_mode=True,
+        )
+        critique_data = json.loads(critique_content)
+        refined_exp = critique_data.get("refined_content", tailored_exp)
+        
+        exp_entries = refined_exp if isinstance(refined_exp, list) and len(refined_exp) > 0 else tailored_exp
+        
         structured_exp = []
         for entry in exp_entries:
             src_block = "\n".join([" ".join(e.get("bullets", [])) for e in parsed_sections.get("experience", [])])

@@ -170,70 +170,20 @@ async def orchestrate_employability_pipeline(
                     item["bullets"] = b4
 
     # 8. LLM GENERATION & CRITIQUE LOOP
-    from app.prompts.tailor import TAILOR_SUMMARY_PROMPT, TAILOR_EXPERIENCE_PROMPT, TAILOR_SKILLS_PROMPT
-    from app.prompts.analysis import CRITIQUE_PROMPT
-    from app.services.evidence_storage_engine import build_weighted_whitelist
-    import json
+    from app.services.ai_engine import tailor_resume_sections
     
-    weighted_whitelist = build_weighted_whitelist(cand_flat_skills, required_techs)
-
-    # A. Tailor Summary
     try:
-        summary_prompt = TAILOR_SUMMARY_PROMPT.format(
-            allowed_technologies=weighted_whitelist,
-            current_summary=assembled_sections.get("summary", ""),
+        llm_tailored = await tailor_resume_sections(
+            parsed_sections=assembled_sections,
+            job_description=final_jd,
+            jd_analysis=jd_meta,
             job_title=final_title,
-            company=final_company,
-            job_details=final_jd
+            company=final_company
         )
-        summary_resp = await route_and_call_llm(prompt=summary_prompt, task_type="summarization")
-        summary_resp = summary_resp.replace("```json", "").replace("```", "").strip()
-        assembled_sections["summary"] = json.loads(summary_resp).get("summary", assembled_sections.get("summary", ""))
+        # Update assembled_sections with the tailored LLM content
+        assembled_sections.update(llm_tailored)
     except Exception as e:
-        logger.error(f"Summary tailoring failed: {e}")
-
-    # B. Tailor Experience & Apply Critique Loop
-    try:
-        exp_prompt = TAILOR_EXPERIENCE_PROMPT.format(
-            allowed_technologies=weighted_whitelist,
-            experience_entries=json.dumps(assembled_sections.get("experience", []), indent=2),
-            job_title=final_title,
-            company=final_company,
-            job_details=final_jd
-        )
-        exp_resp = await route_and_call_llm(prompt=exp_prompt, task_type="generation")
-        exp_resp = exp_resp.replace("```json", "").replace("```", "").strip()
-        tailored_exp = json.loads(exp_resp).get("experience", assembled_sections.get("experience", []))
-        
-        # Critique Loop
-        critique_prompt = CRITIQUE_PROMPT.format(
-            jd_keywords=", ".join(required_techs[:10]),
-            generated_content=json.dumps(tailored_exp, indent=2)
-        )
-        critique_resp = await route_and_call_llm(prompt=critique_prompt, task_type="generation")
-        critique_resp = critique_resp.replace("```json", "").replace("```", "").strip()
-        refined_exp = json.loads(critique_resp).get("refined_content", tailored_exp)
-        
-        if isinstance(refined_exp, list) and len(refined_exp) > 0 and isinstance(refined_exp[0], dict):
-            assembled_sections["experience"] = refined_exp
-        else:
-            assembled_sections["experience"] = tailored_exp
-            
-    except Exception as e:
-        logger.error(f"Experience tailoring failed: {e}")
-
-    # C. Tailor Skills
-    try:
-        skills_prompt = TAILOR_SKILLS_PROMPT.format(
-            current_skills=json.dumps(assembled_sections.get("skills", {})),
-            allowed_technologies=weighted_whitelist,
-            required_skills=", ".join(required_techs)
-        )
-        skills_resp = await route_and_call_llm(prompt=skills_prompt, task_type="generation")
-        skills_resp = skills_resp.replace("```json", "").replace("```", "").strip()
-        assembled_sections["skills"] = json.loads(skills_resp).get("skills", assembled_sections.get("skills", {}))
-    except Exception as e:
-        logger.error(f"Skills tailoring failed: {e}")
+        logger.error(f"AI Engine Tailoring failed: {e}")
 
     # 8.1 Story Flow & Recruiter Polish
     assembled_sections = optimize_story_flow(assembled_sections, identity)

@@ -35,35 +35,22 @@ def assemble_tailored_resume(
         "certifications": structured_evidence.get("certifications", [])
     }
 
-    # 2. COMPILE EXPERIENCE SECTION (Adapted Bullets)
+    # 2. COMPILE EXPERIENCE SECTION (Raw Bullet Pass-Through)
     for exp in structured_evidence.get("experience", []) or []:
         role = exp.get("role", "")
         company = exp.get("company", "")
         dates = exp.get("dates", "")
         
-        # Get nodes corresponding to this specific experience
-        exp_nodes = [
-            n for n in ranked_nodes 
-            if n["type"] == "experience_bullet" 
-            and n["source_metadata"].get("company") == company 
-            and n["source_metadata"].get("role") == role
-        ]
-        
+        # Pass the original bullets entirely untouched. The LLM Tailoring step will rewrite them.
         assembled_bullets = []
-        for idx, node in enumerate(exp_nodes[:4]):  # Max 4 bullets per role
-            techs = node.get("technologies", [])
-            metrics = node.get("metrics", [])
-            
-            # Retrieve high-trust recruiter layout and adapt it
-            adapted = retrieve_and_adapt_bullet(focus_domain, techs, metrics, bullet_index=idx)
-            assembled_bullets.append(adapted)
-            
-        # Fallback if no nodes found (e.g. mock fallback)
-        if not assembled_bullets:
-            assembled_bullets = [
-                f"Optimized software integrations and backend interfaces utilizing Python and associated services.",
-                f"Collaborated with developers and operations engineers to deliver robust features."
-            ]
+        for bullet in exp.get("bullets", []):
+            if isinstance(bullet, dict):
+                assembled_bullets.append(bullet.get("text", ""))
+            else:
+                assembled_bullets.append(str(bullet))
+                
+        # Limit to 4 bullets max for density
+        assembled_bullets = assembled_bullets[:4]
 
         assembled["experience"].append({
             "role": role,
@@ -86,8 +73,6 @@ def assemble_tailored_resume(
     # Select top 3 projects based on first node's ranked position
     sorted_projects = []
     for title, p_nodes in proj_groups.items():
-        # Represent project score as average or max rank score of its bullets
-        # Find first matching project bullet in ranked list to determine order
         for idx, r_node in enumerate(ranked_nodes):
             if r_node["type"] == "project_bullet" and r_node["source_metadata"].get("title") == title:
                 sorted_projects.append((title, p_nodes, idx))
@@ -99,19 +84,24 @@ def assemble_tailored_resume(
         proj_bullets = []
         proj_techs = set()
         
-        for idx, node in enumerate(p_nodes[:3]):
-            techs = node.get("technologies", [])
-            metrics = node.get("metrics", [])
-            proj_techs.update(techs)
+        # Get raw project bullets from structured_evidence instead of hallucinated nodes
+        # Find the actual project in structured_evidence
+        target_proj = next((p for p in structured_evidence.get("projects", []) if p.get("title", "") == title), None)
+        if target_proj:
+            for desc in target_proj.get("description", [])[:3]:
+                if isinstance(desc, dict):
+                    proj_bullets.append(desc.get("text", ""))
+                else:
+                    proj_bullets.append(str(desc))
             
-            adapted = retrieve_and_adapt_bullet(focus_domain, techs, metrics, bullet_index=idx)
-            proj_bullets.append(adapted)
+            for tech in target_proj.get("technologies", []):
+                proj_techs.add(tech)
             
         assembled["projects"].append({
             "name": title,
             "technologies": sorted(list(proj_techs)) if proj_techs else ["Python", "Docker"],
             "description": proj_bullets,
-            "link": p_nodes[0]["source_metadata"].get("link", "")
+            "link": p_nodes[0]["source_metadata"].get("link", "") if p_nodes else ""
         })
 
     # 4. COMPILE PROFESSIONAL TRANSITION SUMMARY
