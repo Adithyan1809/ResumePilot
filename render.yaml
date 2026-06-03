@@ -22,6 +22,5 @@ services:
 databases:
   - name: resumeai-db
     databaseName: resumeai
-    user: postgres
     plan: free
     region: oregon
