@@ -988,86 +988,93 @@ def _ensure_html_templates_exist():
     html_dir = TEMPLATES_DIR / "html"
     html_dir.mkdir(parents=True, exist_ok=True)
     
-    # Styles.css
+    # Styles.css (Always overwrite to ensure the new ATS style applies)
     css_file = html_dir / "styles.css"
-    if not css_file.exists():
-        with open(css_file, "w") as f:
-            f.write("""
-/* Print-optimized Resume CSS Stylesheet */
+    with open(css_file, "w", encoding="utf-8") as f:
+        f.write("""
+/* Print-optimized ATS Resume CSS Stylesheet */
 body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    color: #1e293b;
-    line-height: 1.4;
-    font-size: 10.5pt;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #000000;
+    line-height: 1.35;
+    font-size: 10pt;
     margin: 0;
     padding: 0;
 }
 .header {
     text-align: center;
-    margin-bottom: 12pt;
+    margin-bottom: 12px;
 }
 .header h1 {
-    font-size: 24pt;
+    font-size: 20pt;
     font-weight: bold;
-    color: #0f172a;
-    margin: 0 0 4pt 0;
+    color: #000000;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 4px 0;
 }
 .contact-info {
-    font-size: 9.5pt;
-    color: #475569;
-    margin-bottom: 2pt;
+    font-size: 9pt;
+    color: #333333;
+    margin-bottom: 2px;
+}
+.contact-info a {
+    color: #5B4B8A;
+    text-decoration: none;
 }
 .section-title {
-    font-size: 12pt;
+    font-size: 10.5pt;
     font-weight: bold;
-    color: #0f172a;
-    margin-top: 14pt;
-    margin-bottom: 4pt;
-    border-bottom: 1px solid #cbd5e1;
+    color: #000000;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #000000;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1.5px;
+    padding-bottom: 2px;
 }
 .summary {
-    margin-bottom: 8pt;
+    margin-bottom: 8px;
+    text-align: justify;
 }
 .experience-item {
-    margin-bottom: 8pt;
+    margin-bottom: 8px;
 }
-.experience-header {
+.flex-row {
     display: flex;
     justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2px;
+}
+.role-company b {
     font-weight: bold;
-    margin-bottom: 2pt;
 }
-.experience-header .role-company {
-    color: #1e293b;
-}
-.experience-header .dates {
-    color: #64748b;
-    font-weight: normal;
+.dates {
     font-size: 9.5pt;
+    color: #333333;
+}
+.sub-detail {
+    font-style: italic;
+    font-size: 9.5pt;
+    color: #333333;
+    margin-bottom: 4px;
 }
 .bullets {
     margin: 0;
-    padding-left: 15px;
+    padding-left: 18px;
 }
 .bullets li {
-    margin-bottom: 3pt;
+    margin-bottom: 3px;
+    text-align: justify;
 }
 .skills-list {
-    margin-bottom: 8pt;
+    margin-bottom: 8px;
+}
+.skills-row {
+    margin-bottom: 3px;
 }
 .education-item {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 4pt;
-}
-.education-item .degree-school {
-    font-weight: bold;
-}
-.education-item .dates {
-    color: #64748b;
-    font-size: 9.5pt;
+    margin-bottom: 8px;
 }
 """)
 
@@ -1085,21 +1092,11 @@ body {
     <style>
         @page {
             size: letter;
-            margin: {{ resume.layout.page_margin_inches | default(0.75) }}in;
+            margin: {{ resume.layout.page_margin_inches | default(0.5) }}in;
         }
         body {
-            font-size: {{ resume.layout.font_size_pt | default(10.5) }}pt;
-            line-height: {{ resume.layout.line_spacing | default(1.2) }};
-        }
-        .section-title {
-            margin-top: {{ (resume.layout.space_after_section | default(8)) * 1.5 }}pt;
-            margin-bottom: {{ resume.layout.space_after_section | default(8) }}pt;
-        }
-        .experience-item, .skills-list, .summary {
-            margin-bottom: {{ resume.layout.space_after_section | default(8) }}pt;
-        }
-        .bullets li {
-            margin-bottom: {{ (resume.layout.space_after_section | default(8)) * 0.3 }}pt;
+            font-size: {{ resume.layout.font_size_pt | default(10) }}pt;
+            line-height: {{ resume.layout.line_spacing | default(1.35) }};
         }
     </style>
 </head>
@@ -1107,11 +1104,12 @@ body {
     <div class="header">
         <h1>{{ contact.name }}</h1>
         <div class="contact-info">
-            {{ contact.email }} &bull; {{ contact.phone }} &bull; {{ contact.location }}
+            {{ contact.location }}{% if contact.email %} | {{ contact.email }}{% endif %}{% if contact.phone %} | {{ contact.phone }}{% endif %}
         </div>
         <div class="contact-info">
-            {% if contact.linkedin %}<a href="{{ contact.linkedin }}">{{ contact.linkedin }}</a>{% endif %}
-            {% if contact.github %} | <a href="{{ contact.github }}">{{ contact.github }}</a>{% endif %}
+            {% if contact.github %}<a href="{{ contact.github }}">{{ contact.github | replace('https://', '') | replace('http://', '') }}</a>{% endif %}
+            {% if contact.linkedin %} | <a href="{{ contact.linkedin }}">{{ contact.linkedin | replace('https://', '') | replace('http://', '') }}</a>{% endif %}
+            {% if contact.portfolio %} | <a href="{{ contact.portfolio }}">{{ contact.portfolio | replace('https://', '') | replace('http://', '') }}</a>{% endif %}
         </div>
     </div>
 
@@ -1126,10 +1124,13 @@ body {
     <div class="section-title">Work Experience</div>
     {% for job in resume.experience %}
     <div class="experience-item">
-        <div class="experience-header">
-            <span class="role-company"><b>{{ job.role }}</b>{% if job.company %} &mdash; <i>{{ job.company }}</i>{% endif %}</span>
-            <span class="dates">{% if job.dates %}({{ job.dates }}){% endif %}</span>
+        <div class="flex-row">
+            <div class="role-company"><b>{{ job.role }}</b>{% if job.company %} &mdash; {{ job.company }}{% endif %}</div>
+            <div class="dates">{% if job.dates %}{{ job.dates }}{% endif %}</div>
         </div>
+        {% if job.location %}
+        <div class="sub-detail">{{ job.location }}</div>
+        {% endif %}
         <ul class="bullets">
             {% for bullet in job.bullets %}
             <li>{{ bullet }}</li>
@@ -1138,15 +1139,23 @@ body {
     </div>
     {% endfor %}
     {% endif %}
-
-    {% if resume.projects %}
+    
+    {% if resume.projects and resume.projects|length == 0 %}
+    {% elif resume.projects %}
     <div class="section-title">Projects</div>
     {% for proj in resume.projects %}
-    <div class="experience-item" style="margin-bottom: 6px;">
-        <div class="experience-header">
-            <span class="role-company"><b>{{ proj.name }}</b>{% if proj.technologies %} (<i>{{ proj.technologies | join(', ') }}</i>){% endif %}</span>
-            <span class="dates">{% if proj.link %}<a href="{{ proj.link }}" style="font-size: 9.5pt; color: #3b82f6;">GitHub</a>{% endif %}</span>
+    <div class="experience-item">
+        <div class="flex-row">
+            <div class="role-company"><b>{{ proj.name }}</b></div>
+            <div class="dates">{% if proj.dates %}{{ proj.dates }}{% endif %}</div>
         </div>
+        {% if proj.technologies or proj.link %}
+        <div class="sub-detail">
+            {% if proj.technologies %}{{ proj.technologies | join(' &middot; ') }}{% endif %}
+            {% if proj.technologies and proj.link %} &middot; {% endif %}
+            {% if proj.link %}<a href="{{ proj.link }}">Link</a>{% endif %}
+        </div>
+        {% endif %}
         <ul class="bullets">
             {% if proj.description is string %}
                 <li>{{ proj.description }}</li>
@@ -1160,11 +1169,34 @@ body {
     {% endfor %}
     {% endif %}
 
+    {% if resume.education %}
+    <div class="section-title">Education</div>
+    {% for edu in resume.education %}
+    <div class="education-item">
+        <div class="flex-row">
+            <div class="role-company"><b>{{ edu.degree }}</b></div>
+            <div class="dates">{% if edu.dates %}{{ edu.dates }}{% endif %}</div>
+        </div>
+        <div class="sub-detail">
+            {% if edu.school %}{{ edu.school }}{% endif %}
+            {% if edu.school and edu.gpa %} | {% endif %}
+            {% if edu.gpa %}CGPA: {{ edu.gpa }}{% endif %}
+        </div>
+        {% set coursework = edu.coursework | default(edu.relevant_coursework) %}
+        {% if coursework %}
+        <div class="sub-detail" style="margin-top: 2px;">
+            <strong>Relevant Coursework:</strong> {{ coursework }}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+
     {% if resume.skills %}
     <div class="section-title">Technical Skills</div>
     <div class="skills-list">
         {% for skill_entry in resume.skills %}
-        <div class="skills-row" style="margin-bottom: 4px;">
+        <div class="skills-row">
             {% if ':' in skill_entry %}
                 {% set parts = skill_entry.split(':', 1) %}
                 <strong>{{ parts[0].strip() }}:</strong> {{ parts[1].strip() }}
@@ -1175,23 +1207,16 @@ body {
         {% endfor %}
     </div>
     {% endif %}
-
-    {% if resume.education %}
-    <div class="section-title">Education</div>
-    {% for edu in resume.education %}
-    <div class="education-container" style="margin-bottom: 6px;">
-        <div class="education-item">
-            <span class="degree-school"><b>{{ edu.degree }}</b>{% if edu.school %} &mdash; {{ edu.school }}{% endif %}{% if edu.gpa %} (GPA: {{ edu.gpa }}){% endif %}</span>
-            <span class="dates">{% if edu.dates %}({{ edu.dates }}){% endif %}</span>
+    
+    {% if resume.certifications %}
+    <div class="section-title">Certifications</div>
+    <div class="skills-list">
+        {% for cert in resume.certifications %}
+        <div class="skills-row">
+            {{ cert }}
         </div>
-        {% set coursework = edu.coursework | default(edu.relevant_coursework) %}
-        {% if coursework %}
-        <div style="font-size: 9.5pt; color: #475569; margin-top: 2px;">
-            <strong>Relevant Coursework:</strong> {{ coursework }}
-        </div>
-        {% endif %}
+        {% endfor %}
     </div>
-    {% endfor %}
     {% endif %}
 </body>
 </html>
