@@ -28,9 +28,13 @@ def generate_portfolio_assets(
     )
     
     md_skills = "## 🛠️ Technical Skill Matrix\n"
-    for cat, skills in structured_evidence.get("skills", {}).items():
-        if skills:
-            md_skills += f"- **{cat}**: {', '.join(skills)}\n"
+    skills_data = structured_evidence.get("skills", {})
+    if isinstance(skills_data, dict):
+        for cat, skills in skills_data.items():
+            if skills:
+                md_skills += f"- **{cat}**: {', '.join(skills)}\n"
+    elif isinstance(skills_data, list) and skills_data:
+        md_skills += f"- **Skills**: {', '.join([s.get('text', '') if isinstance(s, dict) else str(s) for s in skills_data])}\n"
             
     md_skills += "\n"
     

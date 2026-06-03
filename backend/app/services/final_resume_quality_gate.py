@@ -111,7 +111,14 @@ async def validate_final_resume(
     
     # A. Grounding Score
     unique_techs_used = set()
-    for field in [healed.get("summary", ""), " ".join(healed.get("skills", []))]:
+    skills_text = []
+    for s in healed.get("skills", []):
+        if isinstance(s, dict):
+            skills_text.append(s.get("text", ""))
+        else:
+            skills_text.append(str(s))
+            
+    for field in [healed.get("summary", ""), " ".join(skills_text)]:
         if isinstance(field, str):
             for tech in STANDARD_TECH_VOCAB:
                 pattern = rf"\b{re.escape(tech)}\b"
@@ -260,7 +267,7 @@ async def validate_final_resume(
             healed.get("summary", ""),
             " ".join([b.get("text", "") if isinstance(b, dict) else str(b) for entry in healed.get("experience", []) for b in entry.get("bullets", [])]),
             " ".join([d.get("text", "") if isinstance(d, dict) else str(d) for entry in healed.get("projects", []) for d in entry.get("description", [])]),
-            " ".join(healed.get("skills", []))
+            " ".join(skills_text)
         ])
         resume_keywords = extract_all_keywords(tailored_text)
         jd_keywords = extract_all_keywords(job_description or "Software Engineer")
