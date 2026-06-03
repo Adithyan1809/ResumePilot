@@ -249,7 +249,11 @@ async def tailor_resume_sections(
     
     raw_src_text = parsed_sections.get("summary", "")
     for entry in parsed_sections.get("experience", []) or []:
-        raw_src_text += "\n" + "\n".join(entry.get("bullets", []))
+        for b in entry.get("bullets", []):
+            if isinstance(b, dict):
+                raw_src_text += "\n" + b.get("text", "")
+            else:
+                raw_src_text += "\n" + str(b)
     allowed_techs = extract_allowed_technologies(raw_src_text, github_techs=[])
     
     required_techs = jd_analysis.get("required_techs", [])
@@ -296,7 +300,11 @@ async def tailor_resume_sections(
         for entry in parsed_sections.get("experience", []) or []:
             entry_copy = {k: v for k, v in entry.items()}
             bullets = entry.get("bullets", []) or []
-            entry_copy["bullets"] = [pre_hydrate_bullet(b, skills_list) for b in bullets]
+            hydrated_bullets = []
+            for b in bullets:
+                b_text = b.get("text", "") if isinstance(b, dict) else str(b)
+                hydrated_bullets.append(pre_hydrate_bullet(b_text, skills_list))
+            entry_copy["bullets"] = hydrated_bullets
             hydrated_exp.append(entry_copy)
 
         experience_prompt = TAILOR_EXPERIENCE_PROMPT.format(
@@ -337,7 +345,15 @@ async def tailor_resume_sections(
         
         structured_exp = []
         for entry in exp_entries:
-            src_block = "\n".join([" ".join(e.get("bullets", [])) for e in parsed_sections.get("experience", [])])
+            src_bullets_flat = []
+            for e in parsed_sections.get("experience", []):
+                for b in e.get("bullets", []):
+                    if isinstance(b, dict):
+                        src_bullets_flat.append(b.get("text", ""))
+                    else:
+                        src_bullets_flat.append(str(b))
+            src_block = "\n".join(src_bullets_flat)
+            
             entry_copy = {
                 "role": entry.get("role", ""),
                 "company": entry.get("company", ""),
