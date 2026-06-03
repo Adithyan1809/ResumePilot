@@ -39,10 +39,10 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
 
-    # ── Primary API (e.g. Grok xAI) ──────────────────────────────
+    # ── Primary API (e.g. Grok xAI / Groq) ───────────────────────
     GROK_API_KEY: str = ""
-    GROK_MODEL: str = "grok-3-mini-fast"
-    GROK_BASE_URL: str = "https://api.x.ai/v1"
+    GROK_MODEL: str = "llama-3.3-70b-versatile"
+    GROK_BASE_URL: str = "https://api.groq.com/openai/v1"
 
     # ── Fallback API (e.g. Google Gemini, Groq, OpenRouter) ──────
     FALLBACK_API_KEY: str = ""
