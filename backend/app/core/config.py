@@ -52,6 +52,17 @@ class Settings(BaseSettings):
     # ── CORS ─────────────────────────────────────────────────────
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def parse_database_url(cls, v: str) -> str:
+        """Render injects postgres://, but SQLAlchemy 2.0 async needs postgresql+asyncpg://"""
+        if isinstance(v, str):
+            if v.startswith("postgres://"):
+                return v.replace("postgres://", "postgresql+asyncpg://", 1)
+            if v.startswith("postgresql://"):
+                return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: object) -> List[str]:
