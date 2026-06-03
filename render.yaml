@@ -13,7 +13,7 @@ services:
           name: resumeai-db
           property: connectionString
       - key: CORS_ORIGINS
-        value: '["https://your-vercel-domain.vercel.app"]'
+        value: '["https://resume-pilot-1a81dpu38-adithyan-p-s-projects.vercel.app", "https://resume-pilot.vercel.app"]'
       - key: GROK_API_KEY
         sync: false
       - key: SECRET_KEY
