@@ -148,7 +148,7 @@ function MiniResumePreview({ sections }) {
       <div className="text-center border-b-2 border-gray-800 pb-3 mb-3">
         <div className="text-lg font-bold uppercase tracking-widest">{ci.name || "Candidate Name"}</div>
         <div className="text-xs text-gray-600 mt-1">
-          {[ci.email, ci.phone, ci.location].filter(Boolean).join(" · ")}
+          {[ci.email, ci.phone, ci.location].map(s => (s || "").trim()).filter(Boolean).join(" · ")}
         </div>
         {ci.linkedin && <div className="text-xs text-blue-600">{ci.linkedin}</div>}
       </div>

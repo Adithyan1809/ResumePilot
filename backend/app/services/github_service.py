@@ -207,6 +207,12 @@ async def enrich_projects_section(parsed_sections: Dict[str, Any]) -> Dict[str, 
         formatted_existing = []
         for p in existing_projects:
             name = p.get("name", "").strip()
+            
+            # Filter out spurious location strings misparsed as projects
+            name_lower = name.lower()
+            if "bengaluru" in name_lower or "india" in name_lower or name_lower in ["resume", "portfolio", "test"]:
+                continue
+                
             desc = p.get("description", "")
             bullets = [desc] if isinstance(desc, str) else list(desc) if isinstance(desc, list) else []
             techs = p.get("technologies", [])

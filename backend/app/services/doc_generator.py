@@ -412,7 +412,8 @@ async def generate_docx(
         title_run.bold = True
         title_p.alignment = 1  # Center
         
-        contact_line = f"{contact.get('email', '')} | {contact.get('phone', '')} | {contact.get('location', '')}"
+        parts = [p.strip() for p in [contact.get('email', ''), contact.get('phone', ''), contact.get('location', '')] if p and p.strip()]
+        contact_line = " | ".join(parts)
         contact_p = doc.add_paragraph()
         contact_run = contact_p.add_run(contact_line)
         contact_run.font.name = font_name
@@ -761,7 +762,8 @@ async def _generate_reportlab_pdf_fallback(
     story.append(Paragraph(escape(contact.get("name", "Candidate Name")), title_style))
     story.append(Spacer(1, 4))
     
-    details_line = f"{contact.get('email', '')} | {contact.get('phone', '')} | {contact.get('location', '')}"
+    parts = [p.strip() for p in [contact.get('email', ''), contact.get('phone', ''), contact.get('location', '')] if p and p.strip()]
+    details_line = " | ".join(parts)
     story.append(Paragraph(escape(details_line), subtitle_style))
     
     links = [contact.get("linkedin", ""), contact.get("github", "")]

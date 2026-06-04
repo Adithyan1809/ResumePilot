@@ -59,12 +59,12 @@ def has_repetitive_structure(b1: str, b2: str) -> bool:
     return False
 
 
-async def deduplicate_section_bullets(bullets: List[str], max_similarity: float = 80.0) -> List[str]:
-    """Prunes near-duplicate bullets from a list, preserving the first (higher priority) one."""
+async def deduplicate_section_bullets(bullets: List[str], unique_bullets: List[str], max_similarity: float = 80.0) -> List[str]:
+    """Prunes near-duplicate bullets from a list, preserving the first (higher priority) one, against a global list."""
     if not bullets:
         return []
         
-    unique_bullets = []
+    kept_bullets = []
     for bullet in bullets:
         if not bullet:
             continue
@@ -83,29 +83,31 @@ async def deduplicate_section_bullets(bullets: List[str], max_similarity: float 
                 break
                 
         if not is_dup:
+            kept_bullets.append(bullet)
             unique_bullets.append(bullet)
             
-    return unique_bullets
+    return kept_bullets
 
 
 async def deduplicate_resume(sections: Dict[str, Any], max_similarity: float = 80.0) -> Dict[str, Any]:
-    """Scans and deduplicates all experience, project, and summary blocks within the resume sections."""
+    """Scans and deduplicates all experience, project, and summary blocks within the resume sections globally."""
     if not isinstance(sections, dict):
         return sections
         
     import copy
     cleaned = copy.deepcopy(sections)
+    global_unique = []
     
     # Deduplicate Experience
     if "experience" in cleaned and isinstance(cleaned["experience"], list):
         for entry in cleaned["experience"]:
             if isinstance(entry, dict) and "bullets" in entry:
-                entry["bullets"] = await deduplicate_section_bullets(entry["bullets"], max_similarity)
+                entry["bullets"] = await deduplicate_section_bullets(entry["bullets"], global_unique, max_similarity)
                 
     # Deduplicate Projects
     if "projects" in cleaned and isinstance(cleaned["projects"], list):
         for entry in cleaned["projects"]:
             if isinstance(entry, dict) and "description" in entry:
-                entry["description"] = await deduplicate_section_bullets(entry["description"], max_similarity)
+                entry["description"] = await deduplicate_section_bullets(entry["description"], global_unique, max_similarity)
                 
     return cleaned
