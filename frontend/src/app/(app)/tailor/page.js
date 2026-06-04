@@ -517,12 +517,21 @@ export default function TailorWizardPage() {
                     ))}
                   </div>
                 </div>
-                <button
-                  onClick={() => setStep(2)}
-                  className="flex-shrink-0 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold text-sm shadow-xl shadow-purple-500/25 hover:scale-105 transition-all duration-200"
-                >
-                  Continue → Set Job Target
-                </button>
+                <div className="flex-shrink-0 flex flex-col gap-3">
+                  <button
+                    onClick={() => setStep(2)}
+                    className="w-full px-7 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold text-sm shadow-xl shadow-purple-500/25 hover:scale-105 transition-all duration-200"
+                  >
+                    Continue → Set Job Target
+                  </button>
+                  <button
+                    onClick={() => document.getElementById("reupload-file-input").click()}
+                    className="w-full px-7 py-2.5 rounded-xl border border-slate-700 text-slate-300 font-bold text-xs hover:bg-slate-800 transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <I d={Icons.upload} size="w-4 h-4" /> Re-upload Resume
+                  </button>
+                  <input id="reupload-file-input" type="file" accept=".pdf,.docx" className="hidden" onChange={(e) => e.target.files[0] && handleFileDrop(e.target.files[0])} />
+                </div>
               </div>
             </GCard>
           ) : (
