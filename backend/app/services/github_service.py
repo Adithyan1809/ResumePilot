@@ -56,9 +56,19 @@ async def fetch_github_repositories(username: str) -> List[Dict[str, Any]]:
                 parsed_repos = []
                 for r in repos:
                     if not r.get("fork"):  # focus on original repos
+                        name = r.get("name", "")
+                        desc = r.get("description", "") or ""
+                        
+                        # Filter out location-named repos or empty-description low-value repos
+                        name_lower = name.lower()
+                        if "bengaluru" in name_lower or "india" in name_lower or name_lower in ["resume", "portfolio", "test"]:
+                            continue
+                        if not desc and len(name) < 8:
+                            continue
+                            
                         parsed_repos.append({
-                            "name": r.get("name", ""),
-                            "description": r.get("description", "") or "",
+                            "name": name,
+                            "description": desc,
                             "language": r.get("language", "") or "",
                             "stars": r.get("stargazers_count", 0),
                             "url": r.get("html_url", ""),

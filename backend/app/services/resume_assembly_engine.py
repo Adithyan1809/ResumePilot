@@ -124,4 +124,25 @@ def assemble_tailored_resume(
     raw_text_whitelists = " ".join(flat_skills)
     assembled["summary"] = apply_role_transferability_summary(base_summary, focus_domain, raw_text_whitelists)
 
+    # 5. DEDUPLICATE BULLETS ACROSS SECTIONS
+    seen = set()
+    
+    # Process experience
+    for exp in assembled["experience"]:
+        unique_bullets = []
+        for b in exp.get("bullets", []):
+            if b not in seen:
+                seen.add(b)
+                unique_bullets.append(b)
+        exp["bullets"] = unique_bullets
+        
+    # Process projects
+    for proj in assembled["projects"]:
+        unique_bullets = []
+        for b in proj.get("description", []):
+            if b not in seen:
+                seen.add(b)
+                unique_bullets.append(b)
+        proj["description"] = unique_bullets
+
     return assembled

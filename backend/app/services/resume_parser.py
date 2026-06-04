@@ -30,7 +30,7 @@ SECTION_PATTERNS = {
     "summary": r"\b(summary|profile|objective|professional summary|about me|career objective|executive summary)\b",
     "experience": r"\b(experience|work experience|employment|employment history|work history|professional experience|professional background|career history)\b",
     "education": r"\b(education|academic background|academic history|degrees|credentials|academic qualifications)\b",
-    "skills": r"\b(skills|technical skills|core competencies|technologies|expertise|areas of expertise|professional skills|skills & expertise)\b",
+    "skills": r"\b(skills|technical skills|core competencies|technologies|expertise|areas of expertise|professional skills|skills & expertise|technical toolkit|toolkit|technical proficiencies|proficiencies|technical expertise)\b",
     "certifications": r"\b(certifications|certification|licenses|courses|accreditations|professional certifications)\b",
     "projects": r"\b(projects|key projects|personal projects|selected projects|academic projects)\b",
     "languages": r"\b(languages|language|language proficiency)\b",
@@ -628,12 +628,20 @@ def _parse_education(lines: list[str]) -> list[Dict[str, Any]]:
 
         degree = header
         school = "Accredited University"
+        found_sep = False
         for sep in ["|", "-", "at", ",", "from"]:
             if sep in header:
                 parts = header.split(sep, 1)
                 degree = parts[0].strip()
                 school = parts[1].strip()
+                found_sep = True
                 break
+                
+        if not found_sep and len(block_lines) > 1:
+            potential_school = block_lines[1].strip()
+            # If the second line isn't a date or GPA, use it as school
+            if not re.search(r"\b\d{4}\b", potential_school) and not potential_school.upper().startswith("GPA"):
+                school = potential_school
 
         gpa = ""
         gpa_match = re.search(r"\bGPA:?\s*(\d\.\d{1,2}(?:/\d\.\d)?)\b", block.upper())
