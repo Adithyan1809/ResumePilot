@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import api from "../../../lib/api";
+import api from "@/lib/api";
 import Spinner from "../../../components/ui/Spinner";
 
 function GCard({ children, className = "" }) {

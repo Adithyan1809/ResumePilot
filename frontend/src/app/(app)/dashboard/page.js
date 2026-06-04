@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import api from "../../../lib/api";
+import api from "@/lib/api";
 import Spinner from "../../../components/ui/Spinner";
 
 // ── Inline Icon Components ────────────────────────────────────────────────────

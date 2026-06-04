@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import api from "../../../lib/api";
+import api from "@/lib/api";
 
 // ── Micro Icon Factory ────────────────────────────────────────────────────────
 const I = ({ d, size = "w-5 h-5", sw = 2 }) => (
@@ -348,6 +348,7 @@ export default function TailorWizardPage() {
     }, 1800);
 
     try {
+      const token = localStorage.getItem("resumeai_token");
       if (hasProfile) {
         // Use the full intelligence pipeline
         const res = await api.post("/tailor/quick-tailor", {
@@ -358,7 +359,7 @@ export default function TailorWizardPage() {
           template,
           github_url: githubUrl.trim(),
           strategy_track: strategyTrack,
-        });
+        }, token);
         setResult(res);
         if (res.job_title) setJobTitle(res.job_title);
         if (res.company) setCompany(res.company);
@@ -370,7 +371,7 @@ export default function TailorWizardPage() {
           job_title: jobTitle.trim(),
           company: company.trim(),
           template,
-        });
+        }, token);
         setResult(res);
       }
       setStep(3);

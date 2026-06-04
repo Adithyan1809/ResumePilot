@@ -17,7 +17,7 @@ import {
   Moon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import api from "../../lib/api";
+import api from "@/lib/api";
 import { useState, useEffect } from "react";
 
 const navItems = [

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import api from "../../../lib/api";
+import api from "@/lib/api";
 import ResumeHistory from "../../../components/dashboard/ResumeHistory";
 import Spinner from "../../../components/ui/Spinner";
 import Button from "../../../components/ui/Button";
