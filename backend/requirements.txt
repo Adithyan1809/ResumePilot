@@ -22,7 +22,7 @@ spacy==3.7.2
 scikit-learn
 
 # Semantic Similarity
-sentence-transformers
+# sentence-transformers
 
 # PDF Parsing
 pdfplumber==0.11.4
