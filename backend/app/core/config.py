@@ -50,7 +50,11 @@ class Settings(BaseSettings):
     FALLBACK_BASE_URL: str = ""
 
     # ── CORS ─────────────────────────────────────────────────────
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://resumepilot.adithyanp.me"
+    ]
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
